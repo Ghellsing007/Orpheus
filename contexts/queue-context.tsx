@@ -198,18 +198,8 @@ export function QueueProvider({ children }: { children: React.ReactNode }) {
 
   // Avanza al siguiente al terminar la pista
   useEffect(() => {
-    const audio = player.audioRef.current
-    if (!audio) return
-
-    const handleEnded = () => {
-      playNext()
-    }
-
-    audio.addEventListener("ended", handleEnded)
-    return () => {
-      audio.removeEventListener("ended", handleEnded)
-    }
-  }, [player.audioRef, playNext])
+    return player.registerOnEnded(() => playNext())
+  }, [player.registerOnEnded, playNext])
 
   return (
     <QueueContext.Provider

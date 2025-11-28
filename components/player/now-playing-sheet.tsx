@@ -47,6 +47,7 @@ export function NowPlayingSheet({ open, onClose }: NowPlayingSheetProps) {
     setVolume,
     isMuted,
     toggleMute,
+    setPlayerView,
   } = usePlayer()
   const { playNext, playPrevious, items, currentIndex, playFromQueue, removeFromQueue } = useQueue()
   const [activeTab, setActiveTab] = useState<Tab>("playing")
@@ -99,6 +100,14 @@ export function NowPlayingSheet({ open, onClose }: NowPlayingSheetProps) {
     }
   }, [lyrics])
 
+  useEffect(() => {
+    if (!open) {
+      setPlayerView("floating")
+      return
+    }
+    setPlayerView(activeTab === "playing" ? "expanded" : "floating")
+  }, [open, activeTab, setPlayerView])
+
   const handleLike = () => {
     if (currentSong) {
       const newLiked = toggleLikedSong(currentSong.id)
@@ -137,12 +146,19 @@ export function NowPlayingSheet({ open, onClose }: NowPlayingSheetProps) {
             <>
               {/* Album Art */}
               <div className="flex-1 flex items-center justify-center py-6">
-                <div className="w-full max-w-[300px] aspect-square rounded-2xl overflow-hidden shadow-2xl shadow-black/50">
+                <div className="relative w-full max-w-[320px] md:max-w-[540px] aspect-video rounded-2xl overflow-hidden shadow-2xl shadow-black/50 border border-border/60 bg-card/70">
                   <img
                     src={currentSong.thumbnail || "/placeholder.svg?height=400&width=400&query=album art"}
                     alt={currentSong.title}
-                    className="w-full h-full object-cover"
+                    className="absolute inset-0 w-full h-full object-cover blur-md opacity-60"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-br from-background/80 via-background/50 to-background/80" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center px-4">
+                    <p className="text-sm text-foreground-muted">El video de YouTube se centra aqui al desplegar.</p>
+                    <p className="text-xs text-foreground-subtle">
+                      Al minimizar se mueve como vista flotante sin pausar la reproduccion.
+                    </p>
+                  </div>
                 </div>
               </div>
 
