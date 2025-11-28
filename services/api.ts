@@ -1,0 +1,245 @@
+import { API_BASE_URL } from "@/lib/constants"
+import type { Song, Playlist, SponsorSegment, Lyrics } from "@/types"
+
+type ApiSong = {
+  id?: number
+  ytid: string
+  title: string
+  artist: string
+  image?: string
+  lowResImage?: string
+  highResImage?: string
+  duration: number
+  isLive?: boolean
+}
+
+type ApiPlaylist = {
+  ytid: string
+  id?: string
+  title: string
+  image?: string
+  source?: string
+  list?: ApiSong[]
+  isAlbum?: boolean
+}
+
+class ApiService {
+  private baseUrl: string
+
+  constructor() {
+    this.baseUrl = API_BASE_URL.replace(/\/$/, "")
+  }
+
+  private async fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T> {
+    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`)
+    }
+
+    return response.json()
+  }
+
+  private mapSong(input: ApiSong): Song {
+    const thumbnail = input.highResImage || input.image || input.lowResImage || ""
+    return {
+      id: input.ytid || String(input.id ?? ""),
+      ytid: input.ytid,
+      title: input.title,
+      artist: input.artist,
+      duration: input.duration,
+      thumbnail,
+      thumbnailHigh: input.highResImage || thumbnail,
+      image: input.image,
+      lowResImage: input.lowResImage,
+      highResImage: input.highResImage,
+      isLive: input.isLive,
+      source: "youtube",
+    }
+  }
+
+  private mapPlaylist(input: ApiPlaylist): Playlist {
+    const songs = input.list?.map((song) => this.mapSong(song))
+    return {
+      id: input.ytid || input.id || "",
+      ytid: input.ytid || input.id,
+      title: input.title,
+      thumbnail: input.image || songs?.[0]?.thumbnail || "",
+      image: input.image,
+      songCount: songs?.length ?? 0,
+      source: input.source === "user-created" ? "custom" : "youtube",
+      songs,
+      list: songs,
+      isAlbum: input.isAlbum,
+    }
+  }
+
+  // Health check
+  async health(): Promise<{ status: string }> {
+    return this.fetchJson("/health")
+  }
+
+  // Search
+  async searchSongs(query: string): Promise<Song[]> {
+    const data = await this.fetchJson<{ items: ApiSong[] }>(`/search?q=${encodeURIComponent(query)}`)
+    return (data.items || []).map((song) => this.mapSong(song))
+  }
+
+  async suggestions(query: string): Promise<string[]> {
+    const data = await this.fetchJson<{ items: string[] }>(`/suggestions?q=${encodeURIComponent(query)}`)
+    return data.items || []
+  }
+
+  // Playlists
+  async getPlaylists(params: { query?: string; type?: string; online?: boolean }): Promise<Playlist[]> {
+    const searchParams = new URLSearchParams()
+    if (params.query) searchParams.set("query", params.query)
+    if (params.type) searchParams.set("type", params.type)
+    if (params.online !== undefined) searchParams.set("online", String(params.online))
+
+    const data = await this.fetchJson<{ items: ApiPlaylist[] }>(`/playlists?${searchParams.toString()}`)
+    return (data.items || []).map((playlist) => this.mapPlaylist(playlist))
+  }
+
+  async getPlaylist(id: string, userId?: string): Promise<Playlist> {
+    const params = userId ? `?userId=${userId}` : ""
+    const data = await this.fetchJson<ApiPlaylist>(`/playlists/${id}${params}`)
+    return this.mapPlaylist(data)
+  }
+
+  // Songs
+  async getSong(id: string): Promise<Song> {
+    const data = await this.fetchJson<ApiSong>(`/songs/${id}`)
+    return this.mapSong(data)
+  }
+
+  async getStreamUrl(id: string, quality = "high", mode: "url" | "redirect" | "proxy" = "url", proxy = false) {
+    const params = new URLSearchParams({ quality, mode, proxy: String(proxy) })
+    const response = await fetch(`${this.baseUrl}/songs/${id}/stream?${params.toString()}`, {
+      redirect: "follow",
+    })
+
+    if (mode === "redirect") {
+      if (response.url) return response.url
+      throw new Error("Stream redirect sin URL")
+    }
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`)
+    }
+
+    const data = await response.json()
+    if (!data?.url) throw new Error("Stream URL no disponible")
+    return data.url as string
+  }
+
+  async getSegments(id: string): Promise<SponsorSegment[]> {
+    const data = await this.fetchJson<{ items: { start: number; end: number }[] }>(`/songs/${id}/segments`)
+    return (data.items || []).map((segment) => ({
+      startTime: segment.start,
+      endTime: segment.end,
+      category: "sponsor",
+    }))
+  }
+
+  // Lyrics
+  async getLyrics(artist: string, title: string): Promise<Lyrics> {
+    const params = new URLSearchParams({ artist, title })
+    const data = await this.fetchJson<{ lyrics: string | null; found: boolean }>(`/lyrics?${params.toString()}`)
+    const text = data.lyrics ?? ""
+    const lines = text
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => ({ time: 0, text: line }))
+
+    return {
+      found: data.found,
+      text,
+      lines,
+      synced: false,
+    }
+  }
+
+  // Recommendations
+  async getRecommendations(userId?: string): Promise<Song[]> {
+    const endpoint = userId ? `/recommendations?userId=${userId}` : "/recommendations"
+    const data = await this.fetchJson<{ items: ApiSong[] }>(endpoint)
+    return (data.items || []).map((song) => this.mapSong(song))
+  }
+
+  // User State
+  async getUserState(userId: string) {
+    const data = await this.fetchJson<{
+      likedSongs: ApiSong[]
+      likedPlaylists: ApiPlaylist[]
+      recentlyPlayed: ApiSong[]
+      customPlaylists: ApiPlaylist[]
+      playlistFolders: any[]
+      youtubePlaylists: string[]
+    }>(`/users/${userId}/state`)
+
+    return {
+      likedSongs: (data.likedSongs || []).map((song) => this.mapSong(song)),
+      likedPlaylists: (data.likedPlaylists || []).map((pl) => this.mapPlaylist(pl)),
+      recentlyPlayed: (data.recentlyPlayed || []).map((song) => this.mapSong(song)),
+      customPlaylists: (data.customPlaylists || []).map((pl) => this.mapPlaylist(pl)),
+      playlistFolders: data.playlistFolders || [],
+      youtubePlaylists: data.youtubePlaylists || [],
+    }
+  }
+
+  async likeSong(userId: string, songId: string, add: boolean): Promise<void> {
+    await this.fetchJson(`/users/${userId}/likes/song`, {
+      method: "POST",
+      body: JSON.stringify({ songId, add }),
+    })
+  }
+
+  async likePlaylist(userId: string, playlistId: string, add: boolean): Promise<void> {
+    await this.fetchJson(`/users/${userId}/likes/playlist`, {
+      method: "POST",
+      body: JSON.stringify({ playlistId, add }),
+    })
+  }
+
+  async addToRecently(userId: string, songId: string): Promise<void> {
+    await this.fetchJson(`/users/${userId}/recently`, {
+      method: "POST",
+      body: JSON.stringify({ songId }),
+    })
+  }
+
+  async importYoutubePlaylist(userId: string, playlistId: string): Promise<Playlist[]> {
+    const data = await this.fetchJson<{ youtubePlaylists: string[] }>(`/users/${userId}/playlists/youtube`, {
+      method: "POST",
+      body: JSON.stringify({ playlistId }),
+    })
+    return data.youtubePlaylists as unknown as Playlist[]
+  }
+
+  async createCustomPlaylist(userId: string, title: string, image?: string): Promise<Playlist[]> {
+    const payload: { title: string; image?: string } = { title }
+    if (image) payload.image = image
+    const data = await this.fetchJson<{ customPlaylists: ApiPlaylist[] }>(`/users/${userId}/playlists/custom`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    })
+    return (data.customPlaylists || []).map((pl) => this.mapPlaylist(pl))
+  }
+
+  async addSongToPlaylist(userId: string, playlistId: string, songId: string): Promise<void> {
+    await this.fetchJson(`/users/${userId}/playlists/custom/${playlistId}/songs`, {
+      method: "POST",
+      body: JSON.stringify({ songId }),
+    })
+  }
+}
+
+export const api = new ApiService()
