@@ -14,7 +14,7 @@ pnpm-debug.log*
 .cache/
 
 # Env
-.env
+
 .env.local
 .env.*.local
 .envrc
