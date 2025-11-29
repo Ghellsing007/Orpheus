@@ -181,7 +181,7 @@ export function HomeScreen() {
             <div className="bg-card/50 rounded-xl p-2 mx-4 md:mx-0">
               {recommendations.map((song, index) => (
                 <SongCard
-                  key={song.id}
+                  key={`${song.ytid || song.id || 'rec'}-${index}`}
                   song={song}
                   index={index + 1}
                   showIndex

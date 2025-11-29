@@ -8,7 +8,8 @@ import type { Song } from "@/types"
 import { formatDuration, cn } from "@/lib/utils"
 import { useQueue } from "@/contexts/queue-context"
 import { usePlayer } from "@/contexts/player-context"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useLayoutEffect } from "react"
+import { createPortal } from "react-dom"
 import { getLikedSongs, toggleLikedSong } from "@/lib/storage"
 
 interface SongCardProps {
@@ -24,6 +25,8 @@ export function SongCard({ song, index, showIndex = false, onPlay, compact = fal
   const { currentSong, isPlaying } = usePlayer()
   const [showMenu, setShowMenu] = useState(false)
   const [isLiked, setIsLiked] = useState(false)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number; origin: "top" | "bottom" } | null>(null)
 
   const isCurrentSong = currentSong?.id === song.id
 
@@ -49,6 +52,21 @@ export function SongCard({ song, index, showIndex = false, onPlay, compact = fal
     addToQueue(song)
     setShowMenu(false)
   }
+
+  // Calcula posición del menú en viewport para evitar recortes (especialmente en el mini player).
+  useLayoutEffect(() => {
+    if (!showMenu) return
+    const btn = buttonRef.current
+    if (!btn) return
+    const rect = btn.getBoundingClientRect()
+    const estimatedHeight = 220
+    const estimatedWidth = 240
+    const spaceBelow = window.innerHeight - rect.bottom
+    const openDown = spaceBelow > estimatedHeight + 12
+    const top = openDown ? rect.bottom + 8 : Math.max(8, rect.top - estimatedHeight - 8)
+    const left = Math.min(Math.max(8, rect.left - estimatedWidth + rect.width), window.innerWidth - estimatedWidth - 8)
+    setMenuPos({ top, left, origin: openDown ? "top" : "bottom" })
+  }, [showMenu])
 
   return (
     <div
@@ -138,6 +156,7 @@ export function SongCard({ song, index, showIndex = false, onPlay, compact = fal
       {/* More menu */}
       <div className="relative">
         <button
+          ref={buttonRef}
           onClick={(e) => {
             e.stopPropagation()
             setShowMenu(!showMenu)
@@ -147,44 +166,54 @@ export function SongCard({ song, index, showIndex = false, onPlay, compact = fal
           <MoreVertical className="w-4 h-4" />
         </button>
 
-        {showMenu && (
-          <>
-            <div
-              className="fixed inset-0 z-40"
-              onClick={(e) => {
-                e.stopPropagation()
-                setShowMenu(false)
-              }}
-            />
-            <div className="absolute right-0 top-full mt-1 z-50 w-52 bg-card border border-border rounded-xl shadow-xl py-2 fade-in">
-              <button
+        {showMenu &&
+          createPortal(
+            <>
+              <div
+                className="fixed inset-0 z-[1400]"
                 onClick={(e) => {
                   e.stopPropagation()
-                  handleAddToQueue()
+                  setShowMenu(false)
                 }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
-              >
-                <ListPlus className="w-4 h-4" />
-                Añadir a la cola
-              </button>
-              <button
-                onClick={handleLike}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
-              >
-                <Heart className={cn("w-4 h-4", isLiked && "fill-current text-primary")} />
-                {isLiked ? "Quitar de favoritos" : "Añadir a favoritos"}
-              </button>
-              <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors">
-                <Radio className="w-4 h-4" />
-                Ir a la radio
-              </button>
-              <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors">
-                <Share2 className="w-4 h-4" />
-                Compartir
-              </button>
-            </div>
-          </>
-        )}
+              />
+              {menuPos && (
+                <div
+                  className={cn(
+                    "fixed z-[1500] w-56 bg-card border border-border rounded-xl shadow-xl py-2 fade-in",
+                    menuPos.origin === "bottom" ? "origin-bottom" : "origin-top",
+                  )}
+                  style={{ top: menuPos.top, left: menuPos.left }}
+                >
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleAddToQueue()
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
+                  >
+                    <ListPlus className="w-4 h-4" />
+                    Añadir a la cola
+                  </button>
+                  <button
+                    onClick={handleLike}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
+                  >
+                    <Heart className={cn("w-4 h-4", isLiked && "fill-current text-primary")} />
+                    {isLiked ? "Quitar de favoritos" : "Añadir a favoritos"}
+                  </button>
+                  <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors">
+                    <Radio className="w-4 h-4" />
+                    Ir a la radio
+                  </button>
+                  <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors">
+                    <Share2 className="w-4 h-4" />
+                    Compartir
+                  </button>
+                </div>
+              )}
+            </>,
+            document.body,
+          )}
       </div>
     </div>
   )

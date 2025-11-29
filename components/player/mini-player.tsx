@@ -16,7 +16,8 @@ import {
 import { usePlayer } from "@/contexts/player-context"
 import { useQueue } from "@/contexts/queue-context"
 import { formatDuration, cn } from "@/lib/utils"
-import { useMemo, useState } from "react"
+import { useMemo, useState, useRef, useLayoutEffect } from "react"
+import { createPortal } from "react-dom"
 import { NowPlayingSheet } from "./now-playing-sheet"
 import { getLikedSongs, toggleLikedSong } from "@/lib/storage"
 import { api } from "@/services/api"
@@ -27,6 +28,8 @@ export function MiniPlayer() {
   const { playNext, playPrevious } = useQueue()
   const [showNowPlaying, setShowNowPlaying] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number; origin: "top" | "bottom" } | null>(null)
   const [downloading, setDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState<string | null>(null)
   const [showDownloadModal, setShowDownloadModal] = useState(false)
@@ -60,6 +63,21 @@ export function MiniPlayer() {
       setDownloading(false)
     }
   }
+
+  // Posiciona el menú para que no quede fuera de la pantalla (especialmente en el mini player).
+  useLayoutEffect(() => {
+    if (!menuOpen) return
+    const btn = menuButtonRef.current
+    if (!btn) return
+    const rect = btn.getBoundingClientRect()
+    const estimatedHeight = 260
+    const estimatedWidth = 240
+    const spaceBelow = window.innerHeight - rect.bottom
+    const openDown = spaceBelow > estimatedHeight + 12
+    const top = openDown ? rect.bottom + 8 : Math.max(8, rect.top - estimatedHeight - 8)
+    const left = Math.min(Math.max(8, rect.left - estimatedWidth + rect.width), window.innerWidth - estimatedWidth - 8)
+    setMenuPos({ top, left, origin: openDown ? "top" : "bottom" })
+  }, [menuOpen])
 
   return (
     <>
@@ -122,6 +140,7 @@ export function MiniPlayer() {
           {/* Menu */}
           <div className="relative">
             <button
+              ref={menuButtonRef}
               onClick={(e) => {
                 e.stopPropagation()
                 setMenuOpen((v) => !v)
@@ -130,72 +149,82 @@ export function MiniPlayer() {
             >
               <MoreVertical className="w-5 h-5" />
             </button>
-            {menuOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-40"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setMenuOpen(false)
-                  }}
-                />
-                <div className="absolute right-0 top-full mt-1 z-50 w-56 bg-card border border-border rounded-xl shadow-xl py-2">
-                  <button
+            {menuOpen &&
+              createPortal(
+                <>
+                  <div
+                    className="fixed inset-0 z-[1400]"
                     onClick={(e) => {
                       e.stopPropagation()
-                      handleLike()
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
-                  >
-                    <Heart className={cn("w-4 h-4", isLiked && "fill-current text-primary")} />
-                    {isLiked ? "Quitar de favoritos" : "Agregar a favoritos"}
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      toggleShuffle()
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
-                  >
-                    <Shuffle className={cn("w-4 h-4", shuffle && "text-primary")} />
-                    {shuffle ? "Quitar aleatorio" : "Aleatorio"}
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      cycleRepeat()
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
-                  >
-                    <Repeat className={cn("w-4 h-4", repeat !== "off" && "text-primary")} />
-                    {repeat === "one" ? "Repetir pista" : repeat === "all" ? "Repetir todo" : "Repetir"}
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setShowNowPlaying(true)
                       setMenuOpen(false)
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
-                  >
-                    <ListMusic className="w-4 h-4" />
-                    Ver cola
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setShowDownloadModal(true)
-                      setMenuOpen(false)
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
-                    disabled={downloading}
-                  >
-                    <Download className="w-4 h-4" />
-                    {downloading ? "Preparando..." : "Descargar"}
-                  </button>
-                </div>
-              </>
-            )}
+                  />
+                  {menuPos && (
+                    <div
+                      className={cn(
+                        "fixed z-[1500] w-56 bg-card border border-border rounded-xl shadow-xl py-2",
+                        menuPos.origin === "bottom" ? "origin-bottom" : "origin-top",
+                      )}
+                      style={{ top: menuPos.top, left: menuPos.left }}
+                    >
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleLike()
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
+                      >
+                        <Heart className={cn("w-4 h-4", isLiked && "fill-current text-primary")} />
+                        {isLiked ? "Quitar de favoritos" : "Agregar a favoritos"}
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleShuffle()
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
+                      >
+                        <Shuffle className={cn("w-4 h-4", shuffle && "text-primary")} />
+                        {shuffle ? "Quitar aleatorio" : "Aleatorio"}
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          cycleRepeat()
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
+                      >
+                        <Repeat className={cn("w-4 h-4", repeat !== "off" && "text-primary")} />
+                        {repeat === "one" ? "Repetir pista" : repeat === "all" ? "Repetir todo" : "Repetir"}
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setShowNowPlaying(true)
+                          setMenuOpen(false)
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
+                      >
+                        <ListMusic className="w-4 h-4" />
+                        Ver cola
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setShowDownloadModal(true)
+                          setMenuOpen(false)
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
+                        disabled={downloading}
+                      >
+                        <Download className="w-4 h-4" />
+                        {downloading ? "Preparando..." : "Descargar"}
+                      </button>
+                    </div>
+                  )}
+                </>,
+                document.body,
+              )}
           </div>
 
           {/* Duration - Desktop only */}
