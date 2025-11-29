@@ -20,7 +20,6 @@ import { useMemo, useState, useRef, useLayoutEffect } from "react"
 import { createPortal } from "react-dom"
 import { NowPlayingSheet } from "./now-playing-sheet"
 import { getLikedSongs, toggleLikedSong } from "@/lib/storage"
-import { api } from "@/services/api"
 
 export function MiniPlayer() {
   const { currentSong, isPlaying, currentTime, duration, togglePlay, shuffle, repeat, toggleShuffle, cycleRepeat } =
@@ -49,15 +48,12 @@ export function MiniPlayer() {
     setDownloading(true)
     setDownloadError(null)
     try {
-      const url = await api.getStreamUrl(currentSong.ytid || currentSong.id, "high", "url", false)
-      const link = document.createElement("a")
-      link.href = url
-      link.download = `${currentSong.artist} - ${currentSong.title}.webm`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      const id = encodeURIComponent(currentSong.ytid || currentSong.id)
+      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || window.location.origin).replace(/\/$/, "")
+      const target = `${baseUrl}/download/mp3/${id}`
+      window.open(target, "_blank", "noopener")
       setShowDownloadModal(false)
-    } catch (err) {
+    } catch (_) {
       setDownloadError("No se pudo generar la descarga")
     } finally {
       setDownloading(false)
@@ -262,7 +258,7 @@ export function MiniPlayer() {
                 <p className="font-semibold truncate">{currentSong.title}</p>
                 <p className="text-sm text-foreground-muted truncate">{currentSong.artist}</p>
                 <p className="text-xs text-foreground-muted mt-1">
-                  {formatDuration(currentSong.duration)} • Audio WebM
+                  {formatDuration(currentSong.duration)} • Audio MP3
                 </p>
               </div>
             </div>
