@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { Play, MoreVertical, Heart, ListPlus, Radio, Share2 } from "lucide-react"
+import Link from "next/link"
 import type { Song } from "@/types"
 import { formatDuration, cn } from "@/lib/utils"
 import { useQueue } from "@/contexts/queue-context"
@@ -103,7 +104,17 @@ export function SongCard({ song, index, showIndex = false, onPlay, compact = fal
       {/* Info */}
       <div className="flex-1 min-w-0">
         <p className={cn("font-medium text-sm truncate", isCurrentSong && "text-primary")}>{song.title}</p>
-        <p className="text-xs text-foreground-muted truncate">{song.artist}</p>
+        {song.channelId ? (
+          <Link
+            href={`/artist/${song.channelId}`}
+            onClick={(e) => e.stopPropagation()}
+            className="text-xs text-foreground-muted truncate hover:text-primary transition-colors"
+          >
+            {song.artist}
+          </Link>
+        ) : (
+          <p className="text-xs text-foreground-muted truncate">{song.artist}</p>
+        )}
       </div>
 
       {/* Like button */}

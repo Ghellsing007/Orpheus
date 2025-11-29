@@ -1,20 +1,65 @@
 "use client"
 
-import { Play, Pause, SkipBack, SkipForward, ChevronUp } from "lucide-react"
+import {
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  ChevronUp,
+  MoreVertical,
+  Heart,
+  Shuffle,
+  Repeat,
+  ListMusic,
+  Download,
+} from "lucide-react"
 import { usePlayer } from "@/contexts/player-context"
 import { useQueue } from "@/contexts/queue-context"
-import { formatDuration } from "@/lib/utils"
-import { useState } from "react"
+import { formatDuration, cn } from "@/lib/utils"
+import { useMemo, useState } from "react"
 import { NowPlayingSheet } from "./now-playing-sheet"
+import { getLikedSongs, toggleLikedSong } from "@/lib/storage"
+import { api } from "@/services/api"
 
 export function MiniPlayer() {
-  const { currentSong, isPlaying, currentTime, duration, togglePlay } = usePlayer()
+  const { currentSong, isPlaying, currentTime, duration, togglePlay, shuffle, repeat, toggleShuffle, cycleRepeat } =
+    usePlayer()
   const { playNext, playPrevious } = useQueue()
   const [showNowPlaying, setShowNowPlaying] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+  const [downloadError, setDownloadError] = useState<string | null>(null)
+  const [showDownloadModal, setShowDownloadModal] = useState(false)
 
   if (!currentSong) return null
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0
+  const isLiked = useMemo(() => getLikedSongs().includes(currentSong.id), [currentSong.id])
+
+  const handleLike = () => {
+    toggleLikedSong(currentSong.id)
+    setMenuOpen(false)
+  }
+
+  const handleDownload = async () => {
+    if (!currentSong) return
+    setDownloading(true)
+    setDownloadError(null)
+    try {
+      const url = await api.getStreamUrl(currentSong.ytid || currentSong.id, "high", "url", false)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `${currentSong.artist} - ${currentSong.title}.webm`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      setShowDownloadModal(false)
+    } catch (err) {
+      setDownloadError("No se pudo generar la descarga")
+    } finally {
+      setDownloading(false)
+    }
+  }
 
   return (
     <>
@@ -74,6 +119,85 @@ export function MiniPlayer() {
             </button>
           </div>
 
+          {/* Menu */}
+          <div className="relative">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setMenuOpen((v) => !v)
+              }}
+              className="w-10 h-10 flex items-center justify-center text-foreground-muted hover:text-foreground transition-colors"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </button>
+            {menuOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setMenuOpen(false)
+                  }}
+                />
+                <div className="absolute right-0 top-full mt-1 z-50 w-56 bg-card border border-border rounded-xl shadow-xl py-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleLike()
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
+                  >
+                    <Heart className={cn("w-4 h-4", isLiked && "fill-current text-primary")} />
+                    {isLiked ? "Quitar de favoritos" : "Agregar a favoritos"}
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleShuffle()
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
+                  >
+                    <Shuffle className={cn("w-4 h-4", shuffle && "text-primary")} />
+                    {shuffle ? "Quitar aleatorio" : "Aleatorio"}
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      cycleRepeat()
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
+                  >
+                    <Repeat className={cn("w-4 h-4", repeat !== "off" && "text-primary")} />
+                    {repeat === "one" ? "Repetir pista" : repeat === "all" ? "Repetir todo" : "Repetir"}
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setShowNowPlaying(true)
+                      setMenuOpen(false)
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
+                  >
+                    <ListMusic className="w-4 h-4" />
+                    Ver cola
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setShowDownloadModal(true)
+                      setMenuOpen(false)
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
+                    disabled={downloading}
+                  >
+                    <Download className="w-4 h-4" />
+                    {downloading ? "Preparando..." : "Descargar"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+
           {/* Duration - Desktop only */}
           <div className="hidden md:flex items-center gap-2 text-sm text-foreground-muted min-w-[100px] justify-end">
             <span>{formatDuration(currentTime)}</span>
@@ -85,6 +209,56 @@ export function MiniPlayer() {
 
       {/* Now Playing Sheet */}
       <NowPlayingSheet open={showNowPlaying} onClose={() => setShowNowPlaying(false)} />
+
+      {/* Download Modal */}
+      {showDownloadModal && currentSong && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="bg-card rounded-2xl shadow-2xl w-full max-w-md p-6 relative">
+            <button
+              onClick={() => {
+                setShowDownloadModal(false)
+                setDownloadError(null)
+              }}
+              className="absolute right-3 top-3 text-foreground-muted hover:text-foreground"
+            >
+              ✕
+            </button>
+            <div className="flex items-center gap-4">
+              <img
+                src={currentSong.thumbnail || "/placeholder.svg"}
+                alt={currentSong.title}
+                className="w-20 h-20 rounded-lg object-cover"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold truncate">{currentSong.title}</p>
+                <p className="text-sm text-foreground-muted truncate">{currentSong.artist}</p>
+                <p className="text-xs text-foreground-muted mt-1">
+                  {formatDuration(currentSong.duration)} • Audio WebM
+                </p>
+              </div>
+            </div>
+            {downloadError && <p className="text-destructive text-sm mt-3">{downloadError}</p>}
+            <div className="mt-6 flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowDownloadModal(false)
+                  setDownloadError(null)
+                }}
+                className="px-4 py-2 rounded-full bg-card-hover text-sm"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDownload}
+                disabled={downloading}
+                className="px-4 py-2 rounded-full gradient-primary text-white text-sm font-semibold disabled:opacity-60"
+              >
+                {downloading ? "Preparando..." : "Descargar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

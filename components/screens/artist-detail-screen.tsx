@@ -6,10 +6,10 @@ import { useState, useEffect } from "react"
 import { SongCard } from "@/components/cards/song-card"
 import { PlaylistCard } from "@/components/cards/playlist-card"
 import { CarouselSection } from "@/components/sections/carousel-section"
-import { mockArtists, mockPlaylists, mockSongs } from "@/services/mock-data"
 import { useQueue } from "@/contexts/queue-context"
 import { formatNumber, cn } from "@/lib/utils"
-import type { Artist } from "@/types"
+import type { Artist, Playlist, Song } from "@/types"
+import { api } from "@/services/api"
 
 interface ArtistDetailScreenProps {
   artistId: string
@@ -20,25 +20,53 @@ export function ArtistDetailScreen({ artistId }: ArtistDetailScreenProps) {
   const { setQueue } = useQueue()
   const [artist, setArtist] = useState<Artist | null>(null)
   const [isFollowing, setIsFollowing] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const found = mockArtists.find((a) => a.id === artistId)
-    setArtist(found || null)
-    setIsFollowing(found?.isFollowing || false)
+    let cancelled = false
+    const load = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const data = await api.getChannel(artistId)
+        if (cancelled) return
+        setArtist(data)
+        setIsFollowing(data.isFollowing || false)
+      } catch (err) {
+        if (!cancelled) setError("No pudimos cargar el artista")
+      } finally {
+        if (!cancelled) setIsLoading(false)
+      }
+    }
+    load()
+    return () => {
+      cancelled = true
+    }
   }, [artistId])
 
-  if (!artist) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center text-foreground-muted">
-          <p>Artista no encontrado</p>
+          <p>Cargando artista...</p>
         </div>
       </div>
     )
   }
 
-  const topSongs = artist.topSongs || mockSongs.slice(0, 5)
-  const relatedPlaylists = mockPlaylists.slice(0, 4)
+  if (!artist || error) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center text-foreground-muted">
+          <p>{error ?? "Artista no encontrado"}</p>
+        </div>
+      </div>
+    )
+  }
+
+  const topSongs: Song[] = artist.topSongs || []
+  const relatedPlaylists: Playlist[] = artist.playlists || []
 
   const handlePlayAll = () => {
     if (topSongs.length > 0) {
@@ -52,7 +80,7 @@ export function ArtistDetailScreen({ artistId }: ArtistDetailScreenProps) {
       <div className="relative h-64 md:h-80">
         <div className="absolute inset-0">
           <img
-            src={artist.image || "/placeholder.svg?height=400&width=800&query=artist banner"}
+            src={artist.banner || artist.image || "/placeholder.svg?height=400&width=800&query=artist banner"}
             alt={artist.name}
             className="w-full h-full object-cover"
           />
@@ -73,6 +101,9 @@ export function ArtistDetailScreen({ artistId }: ArtistDetailScreenProps) {
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-2">{artist.name}</h1>
           {artist.monthlyListeners && (
             <p className="text-foreground-muted">{formatNumber(artist.monthlyListeners)} oyentes mensuales</p>
+          )}
+          {artist.subscribers && (
+            <p className="text-foreground-muted">{formatNumber(artist.subscribers)} suscriptores</p>
           )}
         </div>
       </div>
@@ -123,50 +154,60 @@ export function ArtistDetailScreen({ artistId }: ArtistDetailScreenProps) {
         <section className="px-4 md:px-0">
           <h2 className="text-xl font-bold mb-4">Canciones populares</h2>
           <div className="bg-card/50 rounded-xl p-2">
-            {topSongs.map((song, index) => (
-              <SongCard
-                key={song.id}
-                song={song}
-                index={index + 1}
-                showIndex
-                onPlay={() => setQueue(topSongs, index)}
-              />
-            ))}
+            {topSongs.length > 0 ? (
+              topSongs.map((song, index) => (
+                <SongCard
+                  key={song.id}
+                  song={song}
+                  index={index + 1}
+                  showIndex
+                  onPlay={() => setQueue(topSongs, index)}
+                />
+              ))
+            ) : (
+              <div className="text-center py-8 text-foreground-muted">Sin canciones disponibles</div>
+            )}
           </div>
         </section>
 
         {/* Appears On */}
         <CarouselSection title="Aparece en" subtitle="Playlists con este artista">
-          {relatedPlaylists.map((playlist) => (
-            <PlaylistCard key={playlist.id} playlist={playlist} />
-          ))}
+          {relatedPlaylists.length > 0 ? (
+            relatedPlaylists.map((playlist) => <PlaylistCard key={playlist.id} playlist={playlist} />)
+          ) : (
+            <div className="px-4 py-8 text-foreground-muted">Sin playlists para mostrar</div>
+          )}
         </CarouselSection>
 
         {/* Related Artists */}
         <section className="px-4 md:px-0">
           <h2 className="text-xl font-bold mb-4">Artistas similares</h2>
           <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-2">
-            {mockArtists
-              .filter((a) => a.id !== artist.id)
-              .slice(0, 5)
-              .map((relatedArtist) => (
-                <button
-                  key={relatedArtist.id}
-                  onClick={() => router.push(`/artist/${relatedArtist.id}`)}
-                  className="text-center flex-shrink-0 w-28 group"
-                >
-                  <div className="w-28 h-28 rounded-full overflow-hidden mb-2 shadow-lg">
-                    <img
-                      src={relatedArtist.image || "/placeholder.svg?height=150&width=150&query=artist"}
-                      alt={relatedArtist.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                  <p className="font-medium text-sm truncate group-hover:text-primary transition-colors">
-                    {relatedArtist.name}
-                  </p>
-                </button>
-              ))}
+            {(artist.related || []).length > 0 ? (
+              (artist.related || [])
+                .filter((a) => a.id !== artist.id)
+                .slice(0, 6)
+                .map((relatedArtist) => (
+                  <button
+                    key={relatedArtist.id}
+                    onClick={() => router.push(`/artist/${relatedArtist.id}`)}
+                    className="text-center flex-shrink-0 w-28 group"
+                  >
+                    <div className="w-28 h-28 rounded-full overflow-hidden mb-2 shadow-lg">
+                      <img
+                        src={relatedArtist.image || "/placeholder.svg?height=150&width=150&query=artist"}
+                        alt={relatedArtist.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                    <p className="font-medium text-sm truncate group-hover:text-primary transition-colors">
+                      {relatedArtist.name}
+                    </p>
+                  </button>
+                ))
+            ) : (
+              <div className="text-foreground-muted">Sin artistas relacionados</div>
+            )}
           </div>
         </section>
       </div>

@@ -6,6 +6,7 @@ type ApiSong = {
   ytid: string
   title: string
   artist: string
+  channelId?: string
   image?: string
   lowResImage?: string
   highResImage?: string
@@ -60,6 +61,7 @@ class ApiService {
       lowResImage: input.lowResImage,
       highResImage: input.highResImage,
       isLive: input.isLive,
+      channelId: (input as any).channelId,
       source: "youtube",
     }
   }
@@ -77,6 +79,34 @@ class ApiService {
       songs,
       list: songs,
       isAlbum: input.isAlbum,
+    }
+  }
+
+  private mapChannel(input: any): Artist {
+    const playlists = (input.playlists || []).map((pl: any) =>
+      this.mapPlaylist({
+        ytid: pl.ytid || pl.id,
+        id: pl.ytid || pl.id,
+        title: pl.title,
+        image: pl.image,
+        source: "youtube",
+        list: pl.list,
+        isAlbum: pl.isAlbum,
+      }),
+    )
+
+    return {
+      id: input.id || input.ytid || "",
+      ytid: input.ytid || input.id,
+      name: input.title || input.name || "",
+      image: input.image || "",
+      banner: input.banner,
+      handle: input.handle,
+      description: input.description,
+      subscribers: input.subscribers,
+      topSongs: (input.topSongs || []).map((s: any) => this.mapSong(s)),
+      playlists,
+      related: (input.related || []).map((a: any) => this.mapChannel(a)),
     }
   }
 
@@ -239,6 +269,34 @@ class ApiService {
       method: "POST",
       body: JSON.stringify({ songId }),
     })
+  }
+
+  async searchChannels(query: string) {
+    const data = await this.fetchJson<{ items: any[] }>(`/channel/search?q=${encodeURIComponent(query)}`)
+    return (data.items || []).map((item) => this.mapChannel(item))
+  }
+
+  async getChannel(id: string) {
+    const data = await this.fetchJson<any>(`/channel/${id}`)
+    return this.mapChannel(data)
+  }
+
+  async getCuratedHome(): Promise<{
+    artists: Artist[]
+    trending: Song[]
+    featuredPlaylists: Playlist[]
+    moodPlaylists: { title: string; songs: Song[] }[]
+  }> {
+    const data = await this.fetchJson<any>("/home/curated")
+    return {
+      artists: (data.artists || []).map((a: any) => this.mapChannel(a)),
+      trending: (data.trending || []).map((s: any) => this.mapSong(s)),
+      featuredPlaylists: (data.featuredPlaylists || []).map((p: any) => this.mapPlaylist(p)),
+      moodPlaylists: (data.moodPlaylists || []).map((m: any) => ({
+        title: m.title,
+        songs: (m.songs || []).map((s: any) => this.mapSong(s)),
+      })),
+    }
   }
 }
 

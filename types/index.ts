@@ -13,6 +13,7 @@ export interface Song {
   lowResImage?: string
   highResImage?: string
   isLive?: boolean
+  channelId?: string
   source: "youtube" | "local"
   streamUrl?: string
 }
@@ -35,11 +36,18 @@ export interface Playlist {
 
 export interface Artist {
   id: string
+  ytid?: string
   name: string
   image: string
+  banner?: string
+  handle?: string
+  description?: string
+  subscribers?: number
   monthlyListeners?: number
   isFollowing?: boolean
   topSongs?: Song[]
+  playlists?: Playlist[]
+  related?: Artist[]
   albums?: Album[]
   singles?: Album[]
 }

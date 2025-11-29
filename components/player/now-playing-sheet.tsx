@@ -260,7 +260,8 @@ export function NowPlayingSheet({ open, onClose }: NowPlayingSheetProps) {
                     step="0.01"
                     value={isMuted ? 0 : volume}
                     onChange={(e) => setVolume(Number.parseFloat(e.target.value))}
-                    className="flex-1 h-1 bg-card rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:rounded-full"
+                    className="flex-1 h-1 bg-progress-buffer rounded-full appearance-none cursor-pointer accent-primary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full"
+                    style={{ accentColor: "var(--primary)" }}
                   />
                 </div>
               </div>

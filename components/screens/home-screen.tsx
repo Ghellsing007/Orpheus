@@ -1,7 +1,7 @@
 "use client"
 
 import { Play, Sparkles } from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { CarouselSection } from "@/components/sections/carousel-section"
 import { PlaylistCard } from "@/components/cards/playlist-card"
 import { SongCard } from "@/components/cards/song-card"
@@ -19,24 +19,11 @@ export function HomeScreen() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [playlists, setPlaylists] = useState<Playlist[]>([])
+  const [moodPlaylists, setMoodPlaylists] = useState<{ title: string; songs: Song[] }[]>([])
   const [trending, setTrending] = useState<Song[]>([])
   const [recommendations, setRecommendations] = useState<Song[]>([])
   const [recent, setRecent] = useState<Song[]>([])
-
-  const artists: Artist[] = useMemo(() => {
-    const source = [...trending, ...recommendations]
-    const unique = new Map<string, Artist>()
-    source.forEach((song) => {
-      if (!unique.has(song.artist)) {
-        unique.set(song.artist, {
-          id: song.artist,
-          name: song.artist,
-          image: song.thumbnail || "/placeholder.svg?height=200&width=200&query=artist",
-        })
-      }
-    })
-    return Array.from(unique.values()).slice(0, 10)
-  }, [trending, recommendations])
+  const [artists, setArtists] = useState<Artist[]>([])
 
   useEffect(() => {
     let cancelled = false
@@ -44,14 +31,24 @@ export function HomeScreen() {
       setIsLoading(true)
       setError(null)
       try {
+        const curated = await api.getCuratedHome().catch(() => null)
+
         const [pls, topSongs, recs] = await Promise.all([
           api.getPlaylists({ type: "all", online: false }),
           api.searchSongs("top hits"),
           api.getRecommendations(userId).catch(() => []),
         ])
         if (cancelled) return
-        setPlaylists(pls)
-        setTrending(topSongs)
+
+        if (curated) {
+          setArtists(curated.artists)
+          setTrending(curated.trending.length ? curated.trending : topSongs)
+          setPlaylists(curated.featuredPlaylists.length ? curated.featuredPlaylists : pls)
+          setMoodPlaylists(curated.moodPlaylists)
+        } else {
+          setTrending(topSongs)
+          setPlaylists(pls)
+        }
         setRecommendations(recs)
 
         const userState = await api.getUserState(userId).catch(() => null)
@@ -76,6 +73,15 @@ export function HomeScreen() {
     const list = trending.length > 0 ? trending : recommendations
     if (list.length > 0) setQueue(list, 0)
   }
+
+  const fallbackArtists =
+    artists.length > 0
+      ? artists
+      : trending.slice(0, 10).map((song) => ({
+          id: song.channelId || song.artist,
+          name: song.artist,
+          image: song.thumbnail || "/placeholder.svg?height=200&width=200&query=artist",
+        }))
 
   if (isLoading) {
     return (
@@ -157,9 +163,9 @@ export function HomeScreen() {
         )}
 
         {/* Artists */}
-        {artists.length > 0 && (
+        {fallbackArtists.length > 0 && (
           <CarouselSection title="Artistas populares" subtitle="Descubre nuevos talentos">
-            {artists.map((artist) => (
+            {fallbackArtists.map((artist) => (
               <ArtistCard key={artist.id} artist={artist} />
             ))}
           </CarouselSection>
@@ -214,10 +220,17 @@ export function HomeScreen() {
         )}
 
         {/* Mood Playlists */}
-        {playlists.length > 0 && (
+        {moodPlaylists.length > 0 && (
           <CarouselSection title="Mood Playlists" subtitle="Musica para cada momento">
-            {[...playlists].reverse().map((playlist) => (
-              <PlaylistCard key={playlist.id} playlist={playlist} size="lg" />
+            {moodPlaylists.map((mood, idx) => (
+              <div key={`${mood.title}-${idx}`} className="w-full space-y-2">
+                <h3 className="text-lg font-semibold px-2">{mood.title}</h3>
+                <div className="bg-card/50 rounded-xl p-2 space-y-1">
+                  {mood.songs.map((song, index) => (
+                    <SongCard key={`${song.id}-${index}`} song={song} onPlay={() => setQueue(mood.songs, index)} />
+                  ))}
+                </div>
+              </div>
             ))}
           </CarouselSection>
         )}
