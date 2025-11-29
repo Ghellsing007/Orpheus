@@ -1,27 +1,33 @@
 {
   "name": "Orpheus Music",
   "short_name": "Orpheus",
-  "description": "Tu app de streaming de música favorita",
-  "start_url": "/",
+  "lang": "es",
+  "dir": "ltr",
+  "description": "Tu app de streaming de musica favorita",
+  "id": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "fullscreen"],
   "background_color": "#0d0f14",
-  "theme_color": "#3b82f6",
+  "theme_color": "#0d0f14",
   "orientation": "portrait-primary",
-  "icons": [
-    {
-      "src": "/icon-192.jpg",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icon-512.jpg",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ],
   "categories": ["music", "entertainment"],
-  "screenshots": [],
-  "prefer_related_applications": false
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Inicio", "short_name": "Inicio", "url": "/?source=shortcut-home", "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Buscar musica", "short_name": "Buscar", "url": "/search", "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Tu biblioteca", "short_name": "Biblioteca", "url": "/library", "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Ajustes rapidos", "short_name": "Ajustes", "url": "/settings", "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }] }
+  ],
+  "screenshots": [
+    { "src": "/pwa-screenshot.png", "sizes": "1280x720", "type": "image/png", "label": "Experiencia Orpheus lista para instalar" }
+  ],
+  "prefer_related_applications": false,
+  "edge_side_panel": { "preferred_width": 480 }
 }

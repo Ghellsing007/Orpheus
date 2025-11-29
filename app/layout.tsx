@@ -9,17 +9,27 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 export const metadata: Metadata = {
   title: "Orpheus - Music Streaming",
   description: "Descubre y disfruta millones de canciones con Orpheus",
+  applicationName: "Orpheus",
   manifest: "/manifest.json",
+  formatDetection: {
+    telephone: false,
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Orpheus",
   },
   icons: {
-    icon: "/icon-192.png",
+    icon: [
+      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
+      { url: "/icon-512.png", type: "image/png", sizes: "512x512" },
+      { url: "/icon-maskable-192.png", type: "image/png", sizes: "192x192", purpose: "maskable" },
+      { url: "/icon-maskable-512.png", type: "image/png", sizes: "512x512", purpose: "maskable" },
+    ],
     apple: "/apple-icon-180.png",
+    shortcut: "/icon-192.png",
   },
-    generator: 'v0.app'
+  generator: "v0.app",
 }
 
 export const viewport: Viewport = {
@@ -40,6 +50,8 @@ export default function RootLayout({
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="application-name" content="Orpheus" />
       </head>
       <body className={`${inter.className} font-sans antialiased`}>
         <Providers>{children}</Providers>
