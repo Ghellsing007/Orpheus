@@ -26,24 +26,10 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
   const [avatarUrlInput, setAvatarUrlInput] = useState("")
-  const [avatarFileData, setAvatarFileData] = useState("")
-  const [avatarFileName, setAvatarFileName] = useState("")
 
   if (!open) return null
 
   const initialsName = displayName || username || "Orpheus"
-
-  const handleFileChange = (file?: File) => {
-    if (!file) return
-    setAvatarFileName(file.name)
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setAvatarFileData(reader.result)
-      }
-    }
-    reader.readAsDataURL(file)
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -61,7 +47,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
           username: username || undefined,
           email: email || undefined,
           phone: phone || undefined,
-          avatarUrl: avatarUrlInput || avatarFileData || undefined,
+          avatarUrl: avatarUrlInput || undefined,
           role: "user",
         })
         setUserId(res.userId)
@@ -118,9 +104,9 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
         <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
           {mode === "register" && (
             <div className="flex items-center gap-3">
-              {avatarUrlInput || avatarFileData ? (
+              {avatarUrlInput ? (
                 <img
-                  src={avatarUrlInput || avatarFileData}
+                  src={avatarUrlInput}
                   alt="avatar"
                   className="w-12 h-12 rounded-full object-cover border border-border"
                 />
@@ -128,10 +114,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                 <AvatarInitials name={initialsName} size={48} />
               )}
               <div className="text-sm text-foreground-muted">
-                Opcional: agrega una foto o usa las iniciales
-                {avatarFileName && (
-                  <div className="text-xs text-foreground truncate mt-1">Seleccionado: {avatarFileName}</div>
-                )}
+                Opcional: agrega un avatar con URL o usa las iniciales
               </div>
             </div>
           )}
@@ -195,15 +178,6 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                     className="mt-1 w-full h-10 rounded-lg bg-background border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                   />
                 </label>
-                <div className="text-xs text-foreground-muted">
-                  Subir imagen (opcional)
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileChange(e.target.files?.[0])}
-                    className="mt-1 w-full text-sm file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border file:border-border file:bg-card file:text-foreground hover:file:bg-card-hover"
-                  />
-                </div>
               </>
             )}
           </div>
