@@ -1,12 +1,14 @@
-const CACHE_VERSION = "v4";
-const CACHE_NAME = `orpheus-pwa-${CACHE_VERSION}`;
-const IMAGE_CACHE = `orpheus-img-${CACHE_VERSION}`;
+const DEFAULT_APP_VERSION = "1.0.0";
+let currentAppVersion = DEFAULT_APP_VERSION;
+let CACHE_NAME = getCacheName(currentAppVersion);
+let IMAGE_CACHE = getImageCacheName(currentAppVersion);
 const OFFLINE_URL = "/offline.html";
 const PRECACHE_URLS = [
   "/",
   OFFLINE_URL,
   "/manifest.json",
   "/icon.svg",
+  "/version.json",
   "/icon-192.png",
   "/icon-512.png",
   "/icon-maskable-192.png",
@@ -18,31 +20,34 @@ const STATIC_DESTINATIONS = new Set(["style", "script", "font", "image", "worker
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE_URLS))
-      .then(() => self.skipWaiting())
-  );
-});
+    (async () => {
+      await loadAppVersion()
+      const cache = await caches.open(CACHE_NAME)
+      await cache.addAll(PRECACHE_URLS)
+      await self.skipWaiting()
+    })(),
+  )
+})
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
-      const keys = await caches.keys();
+      await loadAppVersion()
+      const keys = await caches.keys()
       await Promise.all(
         keys
           .filter((key) => key.startsWith("orpheus-pwa-") && key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
-      );
+          .map((key) => caches.delete(key)),
+      )
 
       if (self.registration.navigationPreload) {
-        await self.registration.navigationPreload.enable();
+        await self.registration.navigationPreload.enable()
       }
 
-      await self.clients.claim();
-    })()
-  );
-});
+      await self.clients.claim()
+    })(),
+  )
+})
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
@@ -153,9 +158,41 @@ function isSameOrigin(url) {
 
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
-    self.skipWaiting();
+    self.skipWaiting()
   }
 });
+
+async function loadAppVersion() {
+  try {
+    const response = await fetch("/version.json", { cache: "no-store" })
+    if (response.ok) {
+      const data = await response.json()
+      if (data?.version) {
+        setCacheVersion(data.version)
+      }
+    }
+  } catch (error) {
+    setCacheVersion(DEFAULT_APP_VERSION)
+  }
+}
+
+function setCacheVersion(version) {
+  currentAppVersion = version
+  CACHE_NAME = getCacheName(version)
+  IMAGE_CACHE = getImageCacheName(version)
+}
+
+function getCacheName(version) {
+  return `orpheus-pwa-${normalizeVersion(version)}`
+}
+
+function getImageCacheName(version) {
+  return `orpheus-img-${normalizeVersion(version)}`
+}
+
+function normalizeVersion(version) {
+  return String(version).replace(/[^a-zA-Z0-9._-]/g, "-")
+}
 
 // Manejo de notificaciones con acciones para controles multimedia
 self.addEventListener("notificationclick", (event) => {

@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useRef } from "react"
+import { useEffect, useState, useRef } from "react"
 import {
   Globe,
   Palette,
@@ -24,6 +24,7 @@ import { ACCENT_COLORS } from "@/lib/constants"
 
 export function SettingsScreen() {
   const settings = useSettings()
+  const [appVersion, setAppVersion] = useState("v1.0.0")
   const [showExportModal, setShowExportModal] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
   const [importData, setImportData] = useState("")
@@ -97,6 +98,20 @@ export function SettingsScreen() {
     settings.regenerateSession()
     showNotification("Sesión regenerada")
   }
+
+  useEffect(() => {
+    fetch("/version.json", { cache: "no-store" })
+      .then((res) => {
+        if (!res.ok) throw new Error("Version not found")
+        return res.json()
+      })
+      .then((data) => {
+        if (data?.version) {
+          setAppVersion(data.version)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   return (
     <div className="px-4 md:px-8 py-6 max-w-2xl mx-auto space-y-8">
@@ -302,7 +317,7 @@ export function SettingsScreen() {
       {/* User ID */}
       <section className="text-center text-sm text-foreground-muted py-4">
         <p>User ID: {settings.userId || "Cargando..."}</p>
-        <p className="mt-1">Orpheus v1.0.0</p>
+        <p className="mt-1">Orpheus {appVersion}</p>
       </section>
 
       {/* Import Modal */}
