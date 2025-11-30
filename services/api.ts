@@ -1,5 +1,5 @@
 import { API_BASE_URL } from "@/lib/constants"
-import type { Song, Playlist, SponsorSegment, Lyrics } from "@/types"
+import type { Song, Playlist, Artist, SponsorSegment, Lyrics, HomePreview, HomeSection } from "@/types"
 
 type ApiSong = {
   id?: number
@@ -10,6 +10,7 @@ type ApiSong = {
   image?: string
   lowResImage?: string
   highResImage?: string
+  thumbnail?: string
   duration: number
   isLive?: boolean
 }
@@ -21,6 +22,7 @@ type ApiPlaylist = {
   image?: string
   source?: string
   list?: ApiSong[]
+  songs?: ApiSong[]
   isAlbum?: boolean
 }
 
@@ -48,7 +50,12 @@ class ApiService {
   }
 
   private mapSong(input: ApiSong): Song {
-    const thumbnail = input.highResImage || input.image || input.lowResImage || ""
+    const thumbnail =
+      input.thumbnail ||
+      input.highResImage ||
+      input.image ||
+      input.lowResImage ||
+      ""
     return {
       id: input.ytid || String(input.id ?? ""),
       ytid: input.ytid,
@@ -67,7 +74,8 @@ class ApiService {
   }
 
   private mapPlaylist(input: ApiPlaylist): Playlist {
-    const songs = input.list?.map((song) => this.mapSong(song))
+    const rawSongs = input.songs ?? input.list ?? []
+    const songs = rawSongs.map((song) => this.mapSong(song))
     return {
       id: input.ytid || input.id || "",
       ytid: input.ytid || input.id,
@@ -147,6 +155,27 @@ class ApiService {
   async getSong(id: string): Promise<Song> {
     const data = await this.fetchJson<ApiSong>(`/songs/${id}`)
     return this.mapSong(data)
+  }
+
+  async getSongsByIds(ids: string[]): Promise<Song[]> {
+    if (ids.length === 0) return []
+    const params = new URLSearchParams({ ids: ids.join(",") })
+    const data = await this.fetchJson<{ items: ApiSong[] }>(`/media/songs?${params.toString()}`)
+    return (data.items || []).map((song) => this.mapSong(song))
+  }
+
+  async getPlaylistsByIds(ids: string[]): Promise<Playlist[]> {
+    if (ids.length === 0) return []
+    const params = new URLSearchParams({ ids: ids.join(",") })
+    const data = await this.fetchJson<{ items: ApiPlaylist[] }>(`/media/playlists?${params.toString()}`)
+    return (data.items || []).map((playlist) => this.mapPlaylist(playlist))
+  }
+
+  async getArtistsByIds(ids: string[]): Promise<Artist[]> {
+    if (ids.length === 0) return []
+    const params = new URLSearchParams({ ids: ids.join(",") })
+    const data = await this.fetchJson<{ items: any[] }>(`/media/artists?${params.toString()}`)
+    return (data.items || []).map((artist) => this.mapChannel(artist))
   }
 
   async getStreamUrl(id: string, quality = "high", mode: "url" | "redirect" | "proxy" = "url", proxy = false) {
@@ -282,21 +311,18 @@ class ApiService {
   }
 
   async getCuratedHome(): Promise<{
-    artists: Artist[]
-    trending: Song[]
-    featuredPlaylists: Playlist[]
-    moodPlaylists: { title: string; songs: Song[] }[]
+    sections: HomeSection[]
+    previews: Record<string, HomePreview>
+    status: Record<string, number>
+    updatedAt: string
   }> {
-    const data = await this.fetchJson<any>("/home/curated")
-    return {
-      artists: (data.artists || []).map((a: any) => this.mapChannel(a)),
-      trending: (data.trending || []).map((s: any) => this.mapSong(s)),
-      featuredPlaylists: (data.featuredPlaylists || []).map((p: any) => this.mapPlaylist(p)),
-      moodPlaylists: (data.moodPlaylists || []).map((m: any) => ({
-        title: m.title,
-        songs: (m.songs || []).map((s: any) => this.mapSong(s)),
-      })),
-    }
+    const data = await this.fetchJson<{
+      sections: HomeSection[]
+      previews: Record<string, HomePreview>
+      status: Record<string, number>
+      updatedAt: string
+    }>("/home/curated")
+    return data
   }
 }
 

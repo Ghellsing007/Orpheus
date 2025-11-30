@@ -9,7 +9,7 @@ import { ArtistCard } from "@/components/cards/artist-card"
 import { SkeletonCarousel, SkeletonHero } from "@/components/ui/skeleton-card"
 import { useQueue } from "@/contexts/queue-context"
 import { api } from "@/services/api"
-import type { Artist, Playlist, Song } from "@/types"
+import type { Artist, Playlist, Song, HomePreview, HomeSection, HomeSectionType, SongPreview } from "@/types"
 import { useSettings } from "@/contexts/settings-context"
 import { getRecentlyPlayed } from "@/lib/storage"
 
@@ -33,21 +33,35 @@ export function HomeScreen() {
       try {
         const curated = await api.getCuratedHome().catch(() => null)
 
-        const [pls, topSongs, recs] = await Promise.all([
-          api.getPlaylists({ type: "all", online: false }),
-          api.searchSongs("top hits"),
-          api.getRecommendations(userId).catch(() => []),
-        ])
+        const recs = await api.getRecommendations(userId).catch(() => [])
         if (cancelled) return
 
         if (curated) {
-          setArtists(curated.artists)
-          setTrending(curated.trending.length ? curated.trending : topSongs)
-          setPlaylists(curated.featuredPlaylists.length ? curated.featuredPlaylists : pls)
-          setMoodPlaylists(curated.moodPlaylists)
+          const previews = curated.previews || {}
+          const sections = curated.sections || []
+          const trendingIds = getSectionItemIds(sections, "trendingSongs")
+          const playlistIds = getSectionCollectionIds(sections, "featuredPlaylists")
+          const moodIds = getSectionCollectionIds(sections, "moodPlaylists")
+          const artistIds = getSectionItemIds(sections, "popularArtists")
+
+          const fallbackTrending = buildSongsFromSection(sections, previews, "trendingSongs")
+          const fallbackPlaylists = buildPlaylistsFromSection(sections, previews, "featuredPlaylists")
+          const fallbackMood = buildMoodPlaylists(sections, previews)
+          const fallbackArtists = buildArtistsFromSection(sections, previews)
+
+          const trendingList = await fetchTrending(trendingIds, fallbackTrending)
+          const playlistList = await fetchPlaylists(playlistIds, fallbackPlaylists)
+          const moodList = await fetchMoodPlaylists(moodIds, fallbackMood)
+          const artistList = await fetchArtists(artistIds, fallbackArtists)
+
+          setArtists(artistList)
+          setTrending(trendingList)
+          setPlaylists(playlistList)
+          setMoodPlaylists(moodList)
         } else {
-          setTrending(topSongs)
-          setPlaylists(pls)
+          setError("No pudimos cargar datos curados")
+          setTrending([])
+          setPlaylists([])
         }
         setRecommendations(recs)
 
@@ -74,7 +88,7 @@ export function HomeScreen() {
     if (list.length > 0) setQueue(list, 0)
   }
 
-  const fallbackArtists =
+const fallbackArtists =
     artists.length > 0
       ? artists
       : trending.slice(0, 10).map((song) => ({
@@ -237,4 +251,167 @@ export function HomeScreen() {
       </div>
     </div>
   )
+}
+
+const placeholderImage = "/placeholder.svg?height=300&width=300&query=music"
+
+function buildSongsFromSection(
+  sections: HomeSection[],
+  previews: Record<string, HomePreview>,
+  sectionType: HomeSectionType,
+): Song[] {
+  const section = sections.find((s) => s.type === sectionType)
+  return (section?.itemIds ?? [])
+    .map((id) => previewToSong(previews[id]))
+    .filter((song): song is Song => Boolean(song))
+}
+
+function buildPlaylistsFromSection(
+  sections: HomeSection[],
+  previews: Record<string, HomePreview>,
+  sectionType: HomeSectionType,
+): Playlist[] {
+  const section = sections.find((s) => s.type === sectionType)
+  return (section?.collectionIds ?? [])
+    .map((id) => previewToPlaylist(previews[id]))
+    .filter((playlist): playlist is Playlist => Boolean(playlist))
+}
+
+function buildMoodPlaylists(
+  sections: HomeSection[],
+  previews: Record<string, HomePreview>,
+): { title: string; songs: Song[] }[] {
+  const section = sections.find((s) => s.type === "moodPlaylists")
+  return (section?.collectionIds ?? [])
+    .map((id) => previews[id])
+    .filter((preview): preview is HomePreview => Boolean(preview))
+    .map((preview) => ({
+      title: preview.mood || preview.title,
+      songs: (preview.songs ?? []).map((song) => previewToSong(song)).filter((song): song is Song => Boolean(song)),
+    }))
+}
+
+function buildArtistsFromSection(
+  sections: HomeSection[],
+  previews: Record<string, HomePreview>,
+): Artist[] {
+  const section = sections.find((s) => s.type === "popularArtists")
+  return (section?.itemIds ?? [])
+    .map((id) => previewToArtist(previews[id]))
+    .filter((artist): artist is Artist => Boolean(artist))
+}
+
+function previewToSong(preview?: HomePreview | SongPreview): Song | null {
+  if (!preview) return null
+  const thumbnail = preview.thumbnail || preview.image || placeholderImage
+  return {
+    id: preview.ytid,
+    ytid: preview.ytid,
+    title: preview.title,
+    artist: preview.artist || "",
+    duration: preview.duration ?? 0,
+    thumbnail,
+    thumbnailHigh: preview.image || thumbnail,
+    image: preview.image,
+    lowResImage: preview.thumbnail,
+    highResImage: preview.image,
+    isLive: preview.isLive,
+    source: "youtube",
+  }
+}
+
+function previewToPlaylist(preview?: HomePreview): Playlist | null {
+  if (!preview) return null
+  const songs = (preview.songs ?? []).map((song) => previewToSong(song)).filter((song): song is Song => Boolean(song))
+  const thumbnail = preview.thumbnail || preview.image || placeholderImage
+  return {
+    id: preview.ytid,
+    ytid: preview.ytid,
+    title: preview.title,
+    thumbnail,
+    image: preview.image,
+    songCount: preview.songCount ?? songs.length,
+    source: preview.songCount != null ? "youtube" : "youtube",
+    songs,
+    list: songs,
+  }
+}
+
+function previewToArtist(preview?: HomePreview): Artist | null {
+  if (!preview) return null
+  const image = preview.image || preview.thumbnail || "/placeholder.svg?height=200&width=200&query=artist"
+  return {
+    id: preview.ytid,
+    ytid: preview.ytid,
+    name: preview.title,
+    image,
+    banner: preview.banner,
+    subscribers: preview.subscribers,
+    topSongs: [],
+    playlists: [],
+    related: [],
+  }
+}
+
+async function fetchTrending(ids: string[], fallback: Song[]): Promise<Song[]> {
+  if (ids.length === 0) return fallback
+  try {
+    return await api.getSongsByIds(ids)
+  } catch {
+    return fallback
+  }
+}
+
+async function fetchPlaylists(ids: string[], fallback: Playlist[]): Promise<Playlist[]> {
+  if (ids.length === 0) return fallback
+  try {
+    const fetched = await api.getPlaylistsByIds(ids)
+    const map = new Map(fetched.map((playlist) => [playlist.id, playlist]))
+    return ids.map((id) => map.get(id)).filter((playlist): playlist is Playlist => Boolean(playlist))
+  } catch {
+    return fallback
+  }
+}
+
+async function fetchMoodPlaylists(
+  ids: string[],
+  fallback: { title: string; songs: Song[] }[],
+): Promise<{ title: string; songs: Song[] }[]> {
+  if (ids.length === 0) return fallback
+  try {
+    const fetched = await api.getPlaylistsByIds(ids)
+    const map = new Map(fetched.map((playlist) => [playlist.id, playlist]))
+    const moods = ids
+      .map((id) => map.get(id))
+      .filter((playlist): playlist is Playlist => Boolean(playlist))
+      .map((playlist) => ({
+        title: playlist.title,
+        songs: playlist.songs ?? [],
+      }))
+
+    // Si el backend no devolvió canciones, usa el fallback del preview.
+    const hasSongs = moods.some((m) => m.songs.length > 0)
+    return hasSongs ? moods : fallback
+  } catch {
+    return fallback
+  }
+}
+
+async function fetchArtists(ids: string[], fallback: Artist[]): Promise<Artist[]> {
+  if (ids.length === 0) return fallback
+  try {
+    return await api.getArtistsByIds(ids)
+  } catch {
+    return fallback
+  }
+}
+
+function getSectionItemIds(sections: HomeSection[], type: HomeSectionType): string[] {
+  const section = sections.find((s) => s.type === type)
+  return section?.itemIds ?? []
+}
+
+function getSectionCollectionIds(sections: HomeSection[], type: HomeSectionType): string[] {
+  const section = sections.find((s) => s.type === type)
+  return section?.collectionIds ?? []
 }

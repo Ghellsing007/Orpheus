@@ -135,6 +135,43 @@ export interface Settings {
   autoSkipSponsor: boolean
 }
 
+export type HomeSectionType = "featuredPlaylists" | "trendingSongs" | "popularArtists" | "moodPlaylists" | "recommendations"
+
+export interface HomeSection {
+  type: HomeSectionType
+  itemIds: string[]
+  collectionIds: string[]
+}
+
+export interface SongPreview {
+  ytid: string
+  title: string
+  artist: string
+  thumbnail?: string
+  image?: string
+  lowResImage?: string
+  highResImage?: string
+  duration?: number
+  isLive?: boolean
+}
+
+export interface HomePreview {
+  ytid: string
+  title: string
+  type: "song" | "playlist" | "artist"
+  thumbnail?: string
+  image?: string
+  songCount?: number
+  songs?: SongPreview[]
+  artist?: string
+  duration?: number
+  isLive?: boolean
+  mood?: string
+  banner?: string
+  subscribers?: number
+  source?: "youtube" | "custom" | "curated-fallback"
+}
+
 // =============== API TYPES ===============
 
 export interface SearchResult {
