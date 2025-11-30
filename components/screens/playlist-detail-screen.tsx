@@ -2,7 +2,8 @@
 
 import { ArrowLeft, Play, Shuffle, Heart, MoreVertical, Share2 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useState, useEffect } from "react"
+import { useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { SongCard } from "@/components/cards/song-card"
 import { useQueue } from "@/contexts/queue-context"
 import { formatDuration, cn } from "@/lib/utils"
@@ -18,35 +19,21 @@ export function PlaylistDetailScreen({ playlistId }: PlaylistDetailScreenProps) 
   const router = useRouter()
   const { setQueue } = useQueue()
   const { userId } = useSettings()
-  const [playlist, setPlaylist] = useState<Playlist | null>(null)
   const [isLiked, setIsLiked] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const playlistQuery = useQuery({
+    queryKey: ["playlist", playlistId, userId],
+    queryFn: async () => {
+      const data = await api.getPlaylist(playlistId, userId)
+      const songs = data.songs || data.list || []
+      return { ...data, songs }
+    },
+    staleTime: 1000 * 60 * 10,
+    refetchOnWindowFocus: false,
+  })
 
-  useEffect(() => {
-    let cancelled = false
-    setIsLoading(true)
-    setError(null)
-
-    const load = async () => {
-      try {
-        const data = await api.getPlaylist(playlistId, userId)
-        if (cancelled) return
-        // Ensure songs are set from list if needed
-        const songs = data.songs || data.list || []
-        setPlaylist({ ...data, songs })
-      } catch (err) {
-        if (!cancelled) setError("No pudimos cargar la playlist")
-      } finally {
-        if (!cancelled) setIsLoading(false)
-      }
-    }
-
-    load()
-    return () => {
-      cancelled = true
-    }
-  }, [playlistId, userId])
+  const playlist = playlistQuery.data
+  const isLoading = playlistQuery.isPending && !playlist
+  const error = playlistQuery.isError ? "No pudimos cargar la playlist" : null
 
   if (isLoading) {
     return (

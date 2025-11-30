@@ -1,7 +1,9 @@
 "use client"
 
+import { useMemo } from "react"
+import Link from "next/link"
 import { Play, Sparkles } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { CarouselSection } from "@/components/sections/carousel-section"
 import { PlaylistCard } from "@/components/cards/playlist-card"
 import { SongCard } from "@/components/cards/song-card"
@@ -13,75 +15,93 @@ import type { Artist, Playlist, Song, HomePreview, HomeSection, HomeSectionType,
 import { useSettings } from "@/contexts/settings-context"
 import { getRecentlyPlayed } from "@/lib/storage"
 
+type CuratedResolvedPayload = {
+  trendingSongs?: (HomePreview | SongPreview)[]
+  featuredPlaylists?: HomePreview[]
+  popularArtists?: HomePreview[]
+  moodPlaylists?: HomePreview[]
+}
+
 export function HomeScreen() {
   const { setQueue } = useQueue()
   const { userId } = useSettings()
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [playlists, setPlaylists] = useState<Playlist[]>([])
-  const [moodPlaylists, setMoodPlaylists] = useState<{ title: string; songs: Song[] }[]>([])
-  const [trending, setTrending] = useState<Song[]>([])
-  const [recommendations, setRecommendations] = useState<Song[]>([])
-  const [recent, setRecent] = useState<Song[]>([])
-  const [artists, setArtists] = useState<Artist[]>([])
+  const curatedQuery = useQuery({
+    queryKey: ["home", "curated"],
+    queryFn: () => api.getCuratedHome(),
+    staleTime: 1000 * 60 * 10,
+    refetchOnWindowFocus: false,
+  })
 
-  useEffect(() => {
-    let cancelled = false
-    const load = async () => {
-      setIsLoading(true)
-      setError(null)
-      try {
-        const curated = await api.getCuratedHome().catch(() => null)
+  const recommendationsQuery = useQuery({
+    queryKey: ["recommendations", userId],
+    queryFn: () => api.getRecommendations(userId),
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+  })
 
-        const recs = await api.getRecommendations(userId).catch(() => [])
-        if (cancelled) return
+  const userStateQuery = useQuery({
+    queryKey: ["userState", userId],
+    queryFn: () => api.getUserState(userId),
+    enabled: Boolean(userId),
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+  })
 
-        if (curated) {
-          const previews = curated.previews || {}
-          const sections = curated.sections || []
-          const trendingIds = getSectionItemIds(sections, "trendingSongs")
-          const playlistIds = getSectionCollectionIds(sections, "featuredPlaylists")
-          const moodIds = getSectionCollectionIds(sections, "moodPlaylists")
-          const artistIds = getSectionItemIds(sections, "popularArtists")
+  const curatedSections = curatedQuery.data?.sections ?? []
+  const curatedPreviews = curatedQuery.data?.previews ?? {}
+  const resolved = (curatedQuery.data?.resolved ?? {}) as CuratedResolvedPayload
 
-          const fallbackTrending = buildSongsFromSection(sections, previews, "trendingSongs")
-          const fallbackPlaylists = buildPlaylistsFromSection(sections, previews, "featuredPlaylists")
-          const fallbackMood = buildMoodPlaylists(sections, previews)
-          const fallbackArtists = buildArtistsFromSection(sections, previews)
+  const trending = useMemo(() => {
+    const fromResolved =
+      (resolved?.trendingSongs ?? [])
+        .map((preview) => previewToSong(preview as HomePreview | SongPreview))
+        .filter((song): song is Song => Boolean(song)) || []
+    if (fromResolved.length > 0) return fromResolved
+    return buildSongsFromSection(curatedSections, curatedPreviews, "trendingSongs")
+  }, [curatedSections, curatedPreviews, resolved])
 
-          const trendingList = await fetchTrending(trendingIds, fallbackTrending)
-          const playlistList = await fetchPlaylists(playlistIds, fallbackPlaylists)
-          const moodList = await fetchMoodPlaylists(moodIds, fallbackMood)
-          const artistList = await fetchArtists(artistIds, fallbackArtists)
+  const playlists = useMemo(() => {
+    const fromResolved =
+      (resolved?.featuredPlaylists ?? [])
+        .map((preview) => previewToPlaylist(preview as HomePreview))
+        .filter((playlist): playlist is Playlist => Boolean(playlist)) || []
+    if (fromResolved.length > 0) return fromResolved
+    return buildPlaylistsFromSection(curatedSections, curatedPreviews, "featuredPlaylists")
+  }, [curatedSections, curatedPreviews, resolved])
 
-          setArtists(artistList)
-          setTrending(trendingList)
-          setPlaylists(playlistList)
-          setMoodPlaylists(moodList)
-        } else {
-          setError("No pudimos cargar datos curados")
-          setTrending([])
-          setPlaylists([])
-        }
-        setRecommendations(recs)
+  const moodPlaylists = useMemo(() => {
+    const fromResolved =
+      (resolved?.moodPlaylists ?? [])
+        .map((preview: any) => ({
+          title: (preview as HomePreview).mood || (preview as HomePreview).title,
+          songs:
+            (preview as HomePreview).songs
+              ?.map((song) => previewToSong(song))
+              .filter((song): song is Song => Boolean(song)) ?? [],
+        }))
+        .filter((mood) => mood.songs.length > 0) || []
+    if (fromResolved.length > 0) return fromResolved
+    return buildMoodPlaylists(curatedSections, curatedPreviews)
+  }, [curatedSections, curatedPreviews, resolved])
 
-        const userState = await api.getUserState(userId).catch(() => null)
-        if (!cancelled) {
-          const recentFromApi = userState?.recentlyPlayed ?? []
-          const fallbackRecent = recentFromApi.length > 0 ? recentFromApi : getRecentlyPlayed()
-          setRecent(fallbackRecent)
-        }
-      } catch (err) {
-        if (!cancelled) setError("No pudimos cargar los datos iniciales")
-      } finally {
-        if (!cancelled) setIsLoading(false)
-      }
-    }
-    load()
-    return () => {
-      cancelled = true
-    }
-  }, [userId])
+  const artists = useMemo(() => {
+    const fromResolved =
+      (resolved?.popularArtists ?? [])
+        .map((preview) => previewToArtist(preview as HomePreview))
+        .filter((artist): artist is Artist => Boolean(artist)) || []
+    if (fromResolved.length > 0) return fromResolved
+    return buildArtistsFromSection(curatedSections, curatedPreviews)
+  }, [curatedSections, curatedPreviews, resolved])
+
+  const recommendations = recommendationsQuery.data ?? []
+  const recentFromApi = userStateQuery.data?.recentlyPlayed ?? []
+  const recent = recentFromApi.length > 0 ? recentFromApi : getRecentlyPlayed()
+
+  const isLoading = curatedQuery.isPending && !curatedQuery.data
+  const error =
+    (curatedQuery.isError && "No pudimos cargar datos curados") ||
+    (recommendationsQuery.isError && "No pudimos cargar recomendaciones") ||
+    null
 
   const handlePlayAll = () => {
     const list = trending.length > 0 ? trending : recommendations
@@ -170,7 +190,16 @@ const fallbackArtists =
                   </button>
                 </div>
                 <h3 className="font-medium text-sm truncate">{song.title}</h3>
-                <p className="text-xs text-foreground-muted truncate">{song.artist}</p>
+                {artistHrefFromSong(song) ? (
+                  <Link
+                    href={artistHrefFromSong(song)!}
+                    className="text-xs text-foreground-muted truncate hover:text-primary transition-colors"
+                  >
+                    {song.artist}
+                  </Link>
+                ) : (
+                  <p className="text-xs text-foreground-muted truncate">{song.artist}</p>
+                )}
               </div>
             ))}
           </CarouselSection>
@@ -227,7 +256,16 @@ const fallbackArtists =
                   </button>
                 </div>
                 <h3 className="font-medium text-sm truncate">{song.title}</h3>
-                <p className="text-xs text-foreground-muted truncate">{song.artist}</p>
+                {artistHrefFromSong(song) ? (
+                  <Link
+                    href={artistHrefFromSong(song)!}
+                    className="text-xs text-foreground-muted truncate hover:text-primary transition-colors"
+                  >
+                    {song.artist}
+                  </Link>
+                ) : (
+                  <p className="text-xs text-foreground-muted truncate">{song.artist}</p>
+                )}
               </div>
             ))}
           </CarouselSection>
@@ -353,65 +391,8 @@ function previewToArtist(preview?: HomePreview): Artist | null {
   }
 }
 
-async function fetchTrending(ids: string[], fallback: Song[]): Promise<Song[]> {
-  if (ids.length === 0) return fallback
-  try {
-    return await api.getSongsByIds(ids)
-  } catch {
-    return fallback
-  }
-}
-
-async function fetchPlaylists(ids: string[], fallback: Playlist[]): Promise<Playlist[]> {
-  if (ids.length === 0) return fallback
-  try {
-    const fetched = await api.getPlaylistsByIds(ids)
-    const map = new Map(fetched.map((playlist) => [playlist.id, playlist]))
-    return ids.map((id) => map.get(id)).filter((playlist): playlist is Playlist => Boolean(playlist))
-  } catch {
-    return fallback
-  }
-}
-
-async function fetchMoodPlaylists(
-  ids: string[],
-  fallback: { title: string; songs: Song[] }[],
-): Promise<{ title: string; songs: Song[] }[]> {
-  if (ids.length === 0) return fallback
-  try {
-    const fetched = await api.getPlaylistsByIds(ids)
-    const map = new Map(fetched.map((playlist) => [playlist.id, playlist]))
-    const moods = ids
-      .map((id) => map.get(id))
-      .filter((playlist): playlist is Playlist => Boolean(playlist))
-      .map((playlist) => ({
-        title: playlist.title,
-        songs: playlist.songs ?? [],
-      }))
-
-    // Si el backend no devolvió canciones, usa el fallback del preview.
-    const hasSongs = moods.some((m) => m.songs.length > 0)
-    return hasSongs ? moods : fallback
-  } catch {
-    return fallback
-  }
-}
-
-async function fetchArtists(ids: string[], fallback: Artist[]): Promise<Artist[]> {
-  if (ids.length === 0) return fallback
-  try {
-    return await api.getArtistsByIds(ids)
-  } catch {
-    return fallback
-  }
-}
-
-function getSectionItemIds(sections: HomeSection[], type: HomeSectionType): string[] {
-  const section = sections.find((s) => s.type === type)
-  return section?.itemIds ?? []
-}
-
-function getSectionCollectionIds(sections: HomeSection[], type: HomeSectionType): string[] {
-  const section = sections.find((s) => s.type === type)
-  return section?.collectionIds ?? []
+function artistHrefFromSong(song: Song): string | null {
+  const slug = song.channelId || song.artist
+  if (!slug) return null
+  return `/artist/${encodeURIComponent(slug)}`
 }

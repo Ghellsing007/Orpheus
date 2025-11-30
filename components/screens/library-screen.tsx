@@ -1,7 +1,8 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useMemo, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { Plus, Grid3X3, List, Heart, Clock, Music, User, FolderOpen, Download } from "lucide-react"
 import { SongCard } from "@/components/cards/song-card"
 import { PlaylistCard } from "@/components/cards/playlist-card"
@@ -26,55 +27,43 @@ const filters: { id: Filter; label: string; icon: React.ElementType }[] = [
 export function LibraryScreen() {
   const [activeFilter, setActiveFilter] = useState<Filter>("all")
   const [viewMode, setViewMode] = useState<ViewMode>("grid")
-  const [likedSongs, setLikedSongs] = useState<Song[]>([])
-  const [customPlaylists, setCustomPlaylists] = useState<Playlist[]>([])
-  const [savedPlaylists, setSavedPlaylists] = useState<Playlist[]>([])
-  const [recentSongs, setRecentSongs] = useState<Song[]>([])
-  const [artists, setArtists] = useState<Artist[]>([])
-  const [isLoading, setIsLoading] = useState(true)
   const { setQueue } = useQueue()
   const { userId } = useSettings()
 
-  useEffect(() => {
-    let cancelled = false
-    const load = async () => {
-      setIsLoading(true)
-      try {
-        const state = await api.getUserState(userId)
-        if (cancelled) return
-        setLikedSongs(state.likedSongs || [])
-        setCustomPlaylists(state.customPlaylists || [])
-        setSavedPlaylists(state.likedPlaylists || [])
-        const recent = state.recentlyPlayed && state.recentlyPlayed.length > 0 ? state.recentlyPlayed : getRecentlyPlayed()
-        setRecentSongs(recent)
+  const userStateQuery = useQuery({
+    queryKey: ["userState", userId],
+    queryFn: () => api.getUserState(userId),
+    enabled: Boolean(userId),
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+  })
 
-        const artistMap = new Map<string, Artist>()
-        ;(state.likedSongs || []).forEach((song) => {
-          if (!artistMap.has(song.artist)) {
-            artistMap.set(song.artist, {
-              id: song.artist,
-              name: song.artist,
-              image: song.thumbnail || "/placeholder.svg?height=200&width=200&query=artist",
-            })
-          }
+  const localLikedIds = useMemo(() => getLikedSongs(), [])
+  const localRecent = useMemo(() => getRecentlyPlayed(), [])
+
+  const likedSongs = userStateQuery.data?.likedSongs ?? localRecent.filter((s) => localLikedIds.includes(s.id))
+  const customPlaylists = userStateQuery.data?.customPlaylists ?? []
+  const savedPlaylists = userStateQuery.data?.likedPlaylists ?? []
+  const recentSongs =
+    userStateQuery.data?.recentlyPlayed && userStateQuery.data.recentlyPlayed.length > 0
+      ? userStateQuery.data.recentlyPlayed
+      : localRecent
+
+  const artists = useMemo(() => {
+    const artistMap = new Map<string, Artist>()
+    likedSongs.forEach((song) => {
+      if (!artistMap.has(song.artist)) {
+        artistMap.set(song.artist, {
+          id: song.artist,
+          name: song.artist,
+          image: song.thumbnail || "/placeholder.svg?height=200&width=200&query=artist",
         })
-        setArtists(Array.from(artistMap.values()).slice(0, 12))
-      } catch {
-        // fallback to local data
-        const localLikedIds = getLikedSongs()
-        const localRecent = getRecentlyPlayed()
-        setRecentSongs(localRecent)
-        setLikedSongs(localRecent.filter((s) => localLikedIds.includes(s.id)))
-      } finally {
-        if (!cancelled) setIsLoading(false)
       }
-    }
+    })
+    return Array.from(artistMap.values()).slice(0, 12)
+  }, [likedSongs])
 
-    load()
-    return () => {
-      cancelled = true
-    }
-  }, [userId])
+  const isLoading = userStateQuery.isPending && !userStateQuery.data
 
   const displayedLikedSongs = likedSongs.length > 0 ? likedSongs : recentSongs.slice(0, 5)
 

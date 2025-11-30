@@ -53,6 +53,9 @@ export function SongCard({ song, index, showIndex = false, onPlay, compact = fal
     setShowMenu(false)
   }
 
+  const artistSlug = song.channelId || song.artist
+  const artistHref = artistSlug ? `/artist/${encodeURIComponent(artistSlug)}` : null
+
   // Calcula posición del menú en viewport para evitar recortes (especialmente en el mini player).
   useLayoutEffect(() => {
     if (!showMenu) return
@@ -122,9 +125,9 @@ export function SongCard({ song, index, showIndex = false, onPlay, compact = fal
       {/* Info */}
       <div className="flex-1 min-w-0">
         <p className={cn("font-medium text-sm truncate", isCurrentSong && "text-primary")}>{song.title}</p>
-        {song.channelId ? (
+        {artistHref ? (
           <Link
-            href={`/artist/${song.channelId}`}
+            href={artistHref}
             onClick={(e) => e.stopPropagation()}
             className="text-xs text-foreground-muted truncate hover:text-primary transition-colors"
           >

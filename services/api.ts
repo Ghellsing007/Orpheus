@@ -1,5 +1,21 @@
 import { API_BASE_URL } from "@/lib/constants"
-import type { Song, Playlist, Artist, SponsorSegment, Lyrics, HomePreview, HomeSection } from "@/types"
+import type {
+  Song,
+  Playlist,
+  Artist,
+  SponsorSegment,
+  Lyrics,
+  HomePreview,
+  HomeSection,
+  SongPreview,
+} from "@/types"
+
+type CuratedResolved = {
+  trendingSongs?: (HomePreview | SongPreview)[]
+  featuredPlaylists?: HomePreview[]
+  popularArtists?: HomePreview[]
+  moodPlaylists?: HomePreview[]
+}
 
 type ApiSong = {
   id?: number
@@ -135,11 +151,13 @@ class ApiService {
   }
 
   // Playlists
-  async getPlaylists(params: { query?: string; type?: string; online?: boolean }): Promise<Playlist[]> {
+  async getPlaylists(params: { query?: string; type?: string; online?: boolean; page?: number; limit?: number }): Promise<Playlist[]> {
     const searchParams = new URLSearchParams()
     if (params.query) searchParams.set("query", params.query)
     if (params.type) searchParams.set("type", params.type)
     if (params.online !== undefined) searchParams.set("online", String(params.online))
+    if (params.page) searchParams.set("page", String(params.page))
+    if (params.limit) searchParams.set("limit", String(params.limit))
 
     const data = await this.fetchJson<{ items: ApiPlaylist[] }>(`/playlists?${searchParams.toString()}`)
     return (data.items || []).map((playlist) => this.mapPlaylist(playlist))
@@ -315,12 +333,14 @@ class ApiService {
     previews: Record<string, HomePreview>
     status: Record<string, number>
     updatedAt: string
+    resolved?: CuratedResolved
   }> {
     const data = await this.fetchJson<{
       sections: HomeSection[]
       previews: Record<string, HomePreview>
       status: Record<string, number>
       updatedAt: string
+      resolved?: CuratedResolved
     }>("/home/curated")
     return data
   }

@@ -2,6 +2,7 @@
 
 import { Search, X, TrendingUp } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { SongCard } from "@/components/cards/song-card"
 import { PlaylistCard } from "@/components/cards/playlist-card"
 import { ArtistCard } from "@/components/cards/artist-card"
@@ -28,15 +29,8 @@ const recentSearches = ["The Weeknd", "Dua Lipa", "Pop Mix", "Workout", "Chill"]
 export function SearchScreen() {
   const [query, setQuery] = useState("")
   const [activeTab, setActiveTab] = useState<Tab>("all")
-  const [suggestions, setSuggestions] = useState<string[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
-  const [songs, setSongs] = useState<Song[]>([])
-  const [playlists, setPlaylists] = useState<Playlist[]>([])
-  const [artists, setArtists] = useState<Artist[]>([])
-  const [initialSongs, setInitialSongs] = useState<Song[]>([])
-  const [initialPlaylists, setInitialPlaylists] = useState<Playlist[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [debouncedQuery, setDebouncedQuery] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
   const { setQueue } = useQueue()
 
@@ -54,84 +48,52 @@ export function SearchScreen() {
     return Array.from(unique.values()).slice(0, 12)
   }
 
-  // Load initial content for empty state
   useEffect(() => {
-    let cancelled = false
-    const loadInitial = async () => {
-      try {
-        const [pls, topSongs] = await Promise.all([
-          api.getPlaylists({ type: "all", online: false }),
-          api.searchSongs("top hits"),
-        ])
-        if (cancelled) return
-        setInitialPlaylists(pls)
-        setInitialSongs(topSongs)
-        setArtists(buildArtists(topSongs))
-        setSongs(topSongs)
-        setPlaylists(pls)
-      } catch {
-        // Ignore initial errors
-      }
-    }
-    loadInitial()
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  // Suggestions
-  useEffect(() => {
-    if (!query) {
-      setSuggestions([])
-      return
-    }
-    const timeout = setTimeout(async () => {
-      try {
-        const items = await api.suggestions(query)
-        setSuggestions(items)
-      } catch {
-        setSuggestions([])
-      }
-    }, 200)
-    return () => clearTimeout(timeout)
+    const handler = setTimeout(() => setDebouncedQuery(query.trim()), 250)
+    return () => clearTimeout(handler)
   }, [query])
 
-  // Search (debounced)
-  useEffect(() => {
-    if (!query) {
-      setSongs(initialSongs)
-      setPlaylists(initialPlaylists)
-      setArtists(buildArtists(initialSongs))
-      setError(null)
-      setIsLoading(false)
-      return
-    }
+  const initialQuery = useQuery({
+    queryKey: ["search", "initial"],
+    queryFn: async () => {
+      const [pls, topSongs] = await Promise.all([
+        api.getPlaylists({ type: "all", online: false, limit: 24 }),
+        api.searchSongs("top hits"),
+      ])
+      return { playlists: pls, songs: topSongs }
+    },
+    staleTime: 1000 * 60 * 10,
+    refetchOnWindowFocus: false,
+  })
 
-    const controller = new AbortController()
-    const handler = setTimeout(async () => {
-      setIsLoading(true)
-      setError(null)
-      try {
-        const [foundSongs, foundPlaylists] = await Promise.all([
-          api.searchSongs(query),
-          api.getPlaylists({ query, type: "all", online: true }),
-        ])
-        if (controller.signal.aborted) return
-        setSongs(foundSongs)
-        setPlaylists(foundPlaylists)
-        setArtists(buildArtists(foundSongs))
-      } catch (err) {
-        if (!controller.signal.aborted) setError("No pudimos completar la busqueda")
-      } finally {
-        if (!controller.signal.aborted) setIsLoading(false)
-      }
-    }, 250)
+  const suggestionsQuery = useQuery({
+    queryKey: ["suggestions", debouncedQuery],
+    queryFn: () => api.suggestions(debouncedQuery),
+    enabled: Boolean(debouncedQuery),
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+  })
 
-    return () => {
-      controller.abort()
-      clearTimeout(handler)
-    }
-  }, [query, initialSongs, initialPlaylists])
+  const searchQuery = useQuery({
+    queryKey: ["search", debouncedQuery],
+    queryFn: async () => {
+      const [foundSongs, foundPlaylists] = await Promise.all([
+        api.searchSongs(debouncedQuery),
+        api.getPlaylists({ query: debouncedQuery, type: "all", online: true, limit: 30 }),
+      ])
+      return { songs: foundSongs, playlists: foundPlaylists }
+    },
+    enabled: Boolean(debouncedQuery),
+    staleTime: 1000 * 60 * 2,
+    refetchOnWindowFocus: false,
+  })
+
+  const suggestions = suggestionsQuery.data ?? []
+  const songs = query ? searchQuery.data?.songs ?? [] : initialQuery.data?.songs ?? []
+  const playlists = query ? searchQuery.data?.playlists ?? [] : initialQuery.data?.playlists ?? []
+  const artists = buildArtists(songs.length > 0 ? songs : initialQuery.data?.songs ?? [])
+  const isLoading = query ? searchQuery.isPending : initialQuery.isPending
+  const error = query && searchQuery.isError ? "No pudimos completar la busqueda" : null
 
   return (
     <div className="px-4 md:px-8 py-6 space-y-6">
