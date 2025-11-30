@@ -1,8 +1,8 @@
 "use client"
 
 import type React from "react"
-import { useMemo, useState, useEffect } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useMemo, useState, useEffect, useCallback } from "react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Plus, Grid3X3, List, Heart, Clock, Music, User, FolderOpen, Download } from "lucide-react"
 import { SongCard } from "@/components/cards/song-card"
 import { PlaylistCard } from "@/components/cards/playlist-card"
@@ -12,6 +12,7 @@ import { getLikedSongs, getRecentlyPlayed } from "@/lib/storage"
 import { useQueue } from "@/contexts/queue-context"
 import { api } from "@/services/api"
 import { useSettings } from "@/contexts/settings-context"
+import { AuthModal } from "@/components/auth/auth-modal"
 import type { Playlist, Song, Artist } from "@/types"
 
 type Filter = "all" | "playlists" | "songs" | "artists"
@@ -28,8 +29,10 @@ export function LibraryScreen() {
   const [activeFilter, setActiveFilter] = useState<Filter>("all")
   const [viewMode, setViewMode] = useState<ViewMode>("grid")
   const [hydrated, setHydrated] = useState(false)
+  const [authOpen, setAuthOpen] = useState(false)
   const { setQueue } = useQueue()
-  const { userId } = useSettings()
+  const { userId, role } = useSettings()
+  const queryClient = useQueryClient()
 
   const userStateQuery = useQuery({
     queryKey: ["userState", userId],
@@ -50,6 +53,41 @@ export function LibraryScreen() {
       ? userStateQuery.data.recentlyPlayed
       : localRecent
 
+  const likedPlaylistIds = useMemo(
+    () => new Set<string>(userStateQuery.data?.likedPlaylists?.map((playlist) => playlist.id) ?? []),
+    [userStateQuery.data],
+  )
+  const likedArtistIds = useMemo(
+    () => new Set<string>(userStateQuery.data?.likedArtists?.map((artist) => artist.id) ?? []),
+    [userStateQuery.data],
+  )
+
+  const handleTogglePlaylistLike = useCallback(
+    async (playlistId: string) => {
+      if (!userId || role === "guest") {
+        setAuthOpen(true)
+        return
+      }
+      const add = !likedPlaylistIds.has(playlistId)
+      await api.likePlaylist(userId, playlistId, add)
+      queryClient.invalidateQueries(["userState", userId])
+    },
+    [userId, role, likedPlaylistIds, queryClient],
+  )
+
+  const handleToggleArtistLike = useCallback(
+    async (artistId: string) => {
+      if (!userId || role === "guest") {
+        setAuthOpen(true)
+        return
+      }
+      const add = !likedArtistIds.has(artistId)
+      await api.likeArtist(userId, artistId, add)
+      queryClient.invalidateQueries(["userState", userId])
+    },
+    [userId, role, likedArtistIds, queryClient],
+  )
+
   const artists = useMemo(() => {
     const artistMap = new Map<string, Artist>()
     likedSongs.forEach((song) => {
@@ -67,6 +105,10 @@ export function LibraryScreen() {
   const isLoading = userStateQuery.isPending && !userStateQuery.data
 
   const displayedLikedSongs = likedSongs.length > 0 ? likedSongs : recentSongs.slice(0, 5)
+
+  useEffect(() => {
+    setHydrated(true)
+  }, [])
   const hasClientData = hydrated || Boolean(userStateQuery.data)
   const safeLikedSongs = hasClientData ? displayedLikedSongs : []
 
@@ -257,7 +299,12 @@ export function LibraryScreen() {
             {viewMode === "grid" ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {savedPlaylists.map((playlist) => (
-                  <PlaylistCard key={playlist.id} playlist={playlist} />
+                  <PlaylistCard
+                    key={playlist.id}
+                    playlist={playlist}
+                    isLiked={likedPlaylistIds.has(playlist.id)}
+                    onToggleLike={() => handleTogglePlaylistLike(playlist.id)}
+                  />
                 ))}
               </div>
             ) : (
@@ -291,7 +338,12 @@ export function LibraryScreen() {
             <h2 className="text-lg font-bold mb-4">Artistas seguidos</h2>
             <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-2">
               {artists.map((artist) => (
-                <ArtistCard key={artist.id} artist={artist} />
+                  <ArtistCard
+                    key={artist.id}
+                    artist={artist}
+                    isLiked={likedArtistIds.has(artist.id)}
+                    onToggleLike={() => handleToggleArtistLike(artist.id)}
+                  />
               ))}
             </div>
           </section>
@@ -299,6 +351,7 @@ export function LibraryScreen() {
 
         {isLoading && <p className="text-foreground-muted text-sm">Cargando tu biblioteca...</p>}
       </div>
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </div>
   )
 }

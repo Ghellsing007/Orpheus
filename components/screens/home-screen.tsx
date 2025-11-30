@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import Link from "next/link"
 import { Play, Sparkles } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
@@ -14,6 +14,7 @@ import { api } from "@/services/api"
 import type { Artist, Playlist, Song, HomePreview, HomeSection, HomeSectionType, SongPreview } from "@/types"
 import { useSettings } from "@/contexts/settings-context"
 import { getRecentlyPlayed } from "@/lib/storage"
+import { AuthModal } from "@/components/auth/auth-modal"
 
 type CuratedResolvedPayload = {
   trendingSongs?: (HomePreview | SongPreview)[]
@@ -23,6 +24,7 @@ type CuratedResolvedPayload = {
 }
 
 export function HomeScreen() {
+  const [authOpen, setAuthOpen] = useState(false)
   const { setQueue } = useQueue()
   const { userId } = useSettings()
   const curatedQuery = useQuery({
@@ -155,6 +157,13 @@ const fallbackArtists =
             >
               <Play className="w-6 h-6" fill="currentColor" />
               Comenzar a escuchar
+            </button>
+            <button
+              type="button"
+              onClick={() => setAuthOpen(true)}
+              className="mt-6 inline-flex items-center justify-center w-full md:w-auto px-6 py-3 rounded-full border border-white/30 text-sm font-semibold text-white/90 hover:text-white transition-opacity"
+            >
+              Iniciar sesión
             </button>
             {error && <p className="text-destructive mt-3 text-sm">{error}</p>}
           </div>
@@ -294,6 +303,7 @@ const fallbackArtists =
           </CarouselSection>
         )}
       </div>
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </div>
   )
 }

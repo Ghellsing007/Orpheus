@@ -257,6 +257,7 @@ class ApiService {
     const data = await this.fetchJson<{
       likedSongs: ApiSong[]
       likedPlaylists: ApiPlaylist[]
+      likedArtists: any[]
       recentlyPlayed: ApiSong[]
       customPlaylists: ApiPlaylist[]
       playlistFolders: any[]
@@ -266,6 +267,7 @@ class ApiService {
     return {
       likedSongs: (data.likedSongs || []).map((song) => this.mapSong(song)),
       likedPlaylists: (data.likedPlaylists || []).map((pl) => this.mapPlaylist(pl)),
+      likedArtists: (data.likedArtists || []).map((artist) => this.mapChannel(artist)),
       recentlyPlayed: (data.recentlyPlayed || []).map((song) => this.mapSong(song)),
       customPlaylists: (data.customPlaylists || []).map((pl) => this.mapPlaylist(pl)),
       playlistFolders: data.playlistFolders || [],
@@ -284,6 +286,13 @@ class ApiService {
     await this.fetchJson(`/users/${userId}/likes/playlist`, {
       method: "POST",
       body: JSON.stringify({ playlistId, add }),
+    })
+  }
+
+  async likeArtist(userId: string, artistId: string, add: boolean): Promise<void> {
+    await this.fetchJson(`/users/${userId}/likes/artist`, {
+      method: "POST",
+      body: JSON.stringify({ artistId, add }),
     })
   }
 

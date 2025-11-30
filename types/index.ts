@@ -114,6 +114,7 @@ export interface UserState {
   userId: string
   likedSongs: string[]
   likedPlaylists: string[]
+  likedArtists: Artist[]
   recentlyPlayed: Song[]
   customPlaylists: Playlist[]
   importedPlaylists: Playlist[]
