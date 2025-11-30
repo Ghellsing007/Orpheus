@@ -13,6 +13,7 @@ import {
   ListMusic,
   Download,
 } from "lucide-react"
+import Link from "next/link"
 import { usePlayer } from "@/contexts/player-context"
 import { useQueue } from "@/contexts/queue-context"
 import { formatDuration, cn } from "@/lib/utils"
@@ -60,6 +61,9 @@ export function MiniPlayer() {
     }
   }
 
+  const artistSlug = currentSong.channelId || currentSong.artist
+  const artistHref = artistSlug ? `/artist/${encodeURIComponent(artistSlug)}` : null
+
   // Posiciona el menú para que no quede fuera de la pantalla (especialmente en el mini player).
   useLayoutEffect(() => {
     if (!menuOpen) return
@@ -101,7 +105,19 @@ export function MiniPlayer() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-medium text-sm md:text-base truncate">{currentSong.title}</p>
-              <p className="text-foreground-muted text-xs md:text-sm truncate">{currentSong.artist}</p>
+              {artistHref ? (
+                <Link
+                  href={artistHref}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                  }}
+                  className="text-foreground-muted text-xs md:text-sm truncate hover:text-primary transition-colors"
+                >
+                  {currentSong.artist}
+                </Link>
+              ) : (
+                <p className="text-foreground-muted text-xs md:text-sm truncate">{currentSong.artist}</p>
+              )}
             </div>
           </button>
 
@@ -256,7 +272,19 @@ export function MiniPlayer() {
               />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold truncate">{currentSong.title}</p>
-                <p className="text-sm text-foreground-muted truncate">{currentSong.artist}</p>
+                {artistHref ? (
+                  <Link
+                    href={artistHref}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                    }}
+                    className="text-sm text-foreground-muted truncate hover:text-primary transition-colors"
+                  >
+                    {currentSong.artist}
+                  </Link>
+                ) : (
+                  <p className="text-sm text-foreground-muted truncate">{currentSong.artist}</p>
+                )}
                 <p className="text-xs text-foreground-muted mt-1">
                   {formatDuration(currentSong.duration)} • Audio MP3
                 </p>

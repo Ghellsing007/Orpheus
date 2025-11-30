@@ -17,6 +17,7 @@ import {
   VolumeX,
   ChevronDown,
 } from "lucide-react"
+import Link from "next/link"
 import { usePlayer } from "@/contexts/player-context"
 import { useQueue } from "@/contexts/queue-context"
 import { formatDuration, cn } from "@/lib/utils"
@@ -118,6 +119,8 @@ export function NowPlayingSheet({ open, onClose }: NowPlayingSheetProps) {
   if (!open || !currentSong) return null
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0
+  const artistSlug = currentSong.channelId || currentSong.artist
+  const artistHref = artistSlug ? `/artist/${encodeURIComponent(artistSlug)}` : null
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
@@ -167,7 +170,17 @@ export function NowPlayingSheet({ open, onClose }: NowPlayingSheetProps) {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <h2 className="text-2xl font-bold truncate">{currentSong.title}</h2>
-                    <p className="text-foreground-muted text-lg truncate">{currentSong.artist}</p>
+                    {artistHref ? (
+                      <Link
+                        href={artistHref}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-foreground-muted text-lg truncate hover:text-primary transition-colors"
+                      >
+                        {currentSong.artist}
+                      </Link>
+                    ) : (
+                      <p className="text-foreground-muted text-lg truncate">{currentSong.artist}</p>
+                    )}
                   </div>
                   <button
                     onClick={handleLike}
@@ -331,7 +344,21 @@ export function NowPlayingSheet({ open, onClose }: NowPlayingSheetProps) {
                       <p className={cn("font-medium truncate", index === currentIndex && "text-primary")}>
                         {song.title}
                       </p>
-                      <p className="text-sm text-foreground-muted truncate">{song.artist}</p>
+                      {(() => {
+                        const slug = song.channelId || song.artist
+                        const href = slug ? `/artist/${encodeURIComponent(slug)}` : null
+                        return href ? (
+                          <Link
+                            href={href}
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-sm text-foreground-muted truncate hover:text-primary transition-colors"
+                          >
+                            {song.artist}
+                          </Link>
+                        ) : (
+                          <p className="text-sm text-foreground-muted truncate">{song.artist}</p>
+                        )
+                      })()}
                     </div>
                     <span className="text-sm text-foreground-muted">{formatDuration(song.duration)}</span>
                     {index !== currentIndex && (
