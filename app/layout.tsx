@@ -3,12 +3,13 @@ import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { Providers } from "./providers"
+import { InstallPrompt } from "@/components/pwa/install-prompt"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
 export const metadata: Metadata = {
   title: "Orpheus - Music Streaming",
-  description: "Descubre y disfruta millones de canciones con Orpheus",
+  description: "Music Unbound - Descubre y disfruta millones de canciones con Orpheus",
   applicationName: "Orpheus",
   manifest: "/manifest.json",
   formatDetection: {
@@ -30,7 +31,6 @@ export const metadata: Metadata = {
     apple: "/apple-icon-180.png",
     shortcut: "/icon-192.png",
   },
-  generator: "v0.app",
 }
 
 export const viewport: Viewport = {
@@ -56,6 +56,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} font-sans antialiased`}>
         <Providers>{children}</Providers>
+        <InstallPrompt />
       </body>
     </html>
   )

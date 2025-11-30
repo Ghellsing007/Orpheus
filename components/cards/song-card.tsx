@@ -18,9 +18,17 @@ interface SongCardProps {
   showIndex?: boolean
   onPlay?: () => void
   compact?: boolean
+  showPlayButton?: boolean
 }
 
-export function SongCard({ song, index, showIndex = false, onPlay, compact = false }: SongCardProps) {
+export function SongCard({
+  song,
+  index,
+  showIndex = false,
+  onPlay,
+  compact = false,
+  showPlayButton = true,
+}: SongCardProps) {
   const { setQueue, addToQueue } = useQueue()
   const { currentSong, isPlaying } = usePlayer()
   const [showMenu, setShowMenu] = useState(false)
@@ -79,6 +87,14 @@ export function SongCard({ song, index, showIndex = false, onPlay, compact = fal
         compact && "p-1.5",
       )}
       onClick={handlePlay}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault()
+          handlePlay()
+        }
+      }}
     >
       {showIndex && (
         <span
@@ -106,7 +122,13 @@ export function SongCard({ song, index, showIndex = false, onPlay, compact = fal
       )}
 
       {/* Thumbnail */}
-      <div className={cn("relative rounded overflow-hidden flex-shrink-0", compact ? "w-10 h-10" : "w-12 h-12")}>
+      <div
+        className={cn(
+          "relative rounded overflow-hidden flex-shrink-0",
+          compact ? "w-10 h-10" : "w-12 h-12",
+          "sm:group-hover:opacity-100",
+        )}
+      >
         <img
           src={song.thumbnail || "/placeholder.svg?height=100&width=100&query=song album art"}
           alt={song.title}
@@ -114,12 +136,24 @@ export function SongCard({ song, index, showIndex = false, onPlay, compact = fal
         />
         <div
           className={cn(
-            "absolute inset-0 bg-black/50 flex items-center justify-center transition-opacity",
-            isCurrentSong ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+            "absolute inset-0 flex items-center justify-center transition-opacity pointer-events-none",
+            isCurrentSong ? "opacity-100 bg-black/50" : "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 bg-black/30 sm:bg-black/50",
           )}
         >
           <Play className="w-4 h-4 text-white" fill="currentColor" />
         </div>
+        {!compact && !showIndex && showPlayButton && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              handlePlay()
+            }}
+            className="absolute bottom-1 right-1 w-8 h-8 rounded-full gradient-primary flex items-center justify-center shadow-md shadow-primary/30"
+            aria-label="Reproducir"
+          >
+            <Play className="w-4 h-4 text-white" fill="currentColor" />
+          </button>
+        )}
       </div>
 
       {/* Info */}

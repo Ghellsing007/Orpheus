@@ -1,10 +1,12 @@
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v4";
 const CACHE_NAME = `orpheus-pwa-${CACHE_VERSION}`;
+const IMAGE_CACHE = `orpheus-img-${CACHE_VERSION}`;
 const OFFLINE_URL = "/offline.html";
 const PRECACHE_URLS = [
   "/",
   OFFLINE_URL,
   "/manifest.json",
+  "/icon.svg",
   "/icon-192.png",
   "/icon-512.png",
   "/icon-maskable-192.png",
@@ -50,6 +52,12 @@ self.addEventListener("fetch", (event) => {
   }
 
   const url = new URL(request.url);
+
+  // Cache dedicado para carátulas/imagenes
+  if (request.destination === "image") {
+    event.respondWith(cacheImage(request));
+    return;
+  }
 
   if (request.destination === "audio" || url.pathname.includes("/stream")) {
     return;
@@ -148,3 +156,37 @@ self.addEventListener("message", (event) => {
     self.skipWaiting();
   }
 });
+
+// Manejo de notificaciones con acciones para controles multimedia
+self.addEventListener("notificationclick", (event) => {
+  const action = event.action;
+  event.notification.close();
+
+  event.waitUntil(
+    (async () => {
+      const allClients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      const client = allClients.length ? allClients[0] : await self.clients.openWindow("/");
+      if (client && action) {
+        client.postMessage({ type: "MEDIA_ACTION", action });
+        client.focus && client.focus();
+      }
+    })(),
+  );
+});
+
+async function cacheImage(request) {
+  const cache = await caches.open(IMAGE_CACHE);
+  const cached = await cache.match(request);
+  const fetchPromise = fetch(request)
+    .then((response) => {
+      if (response && response.ok && isSameOrigin(request.url)) {
+        cache.put(request, response.clone());
+      }
+      return response;
+    })
+    .catch(() => undefined);
+
+  if (cached) return cached;
+  const network = await fetchPromise;
+  return network || caches.match(OFFLINE_URL);
+}

@@ -9,6 +9,7 @@ export const STORAGE_KEYS = {
   LIKED_SONGS: "orpheus_liked_songs",
   LIKED_PLAYLISTS: "orpheus_liked_playlists",
   RECENTLY_PLAYED: "orpheus_recently_played",
+  RECENT_SEARCHES: "orpheus_recent_searches",
 } as const
 
 export const DEFAULT_SETTINGS = {

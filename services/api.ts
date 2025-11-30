@@ -9,6 +9,7 @@ import type {
   HomeSection,
   SongPreview,
 } from "@/types"
+import type { UserProfile } from "@/types/user"
 
 type CuratedResolved = {
   trendingSongs?: (HomePreview | SongPreview)[]
@@ -342,6 +343,44 @@ class ApiService {
       updatedAt: string
       resolved?: CuratedResolved
     }>("/home/curated")
+    return data
+  }
+
+  async registerUser(payload: {
+    userId: string
+    displayName?: string
+    username?: string
+    email?: string
+    avatarUrl?: string
+    phone?: string
+  }): Promise<UserProfile> {
+    const data = await this.fetchJson<UserProfile>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    })
+    return data
+  }
+
+  async loginUser(payload: { userId?: string; username?: string; email?: string }): Promise<UserProfile> {
+    const data = await this.fetchJson<UserProfile>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    })
+    return data
+  }
+
+  async updateProfile(payload: {
+    userId: string
+    displayName?: string
+    username?: string
+    email?: string
+    avatarUrl?: string
+    phone?: string
+  }): Promise<UserProfile> {
+    const data = await this.fetchJson<UserProfile>("/auth/profile", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    })
     return data
   }
 }

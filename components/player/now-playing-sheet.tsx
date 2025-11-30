@@ -28,11 +28,12 @@ import { api } from "@/services/api"
 interface NowPlayingSheetProps {
   open: boolean
   onClose: () => void
+  initialTab?: Tab
 }
 
 type Tab = "playing" | "lyrics" | "queue"
 
-export function NowPlayingSheet({ open, onClose }: NowPlayingSheetProps) {
+export function NowPlayingSheet({ open, onClose, initialTab = "playing" }: NowPlayingSheetProps) {
   const {
     currentSong,
     isPlaying,
@@ -51,7 +52,7 @@ export function NowPlayingSheet({ open, onClose }: NowPlayingSheetProps) {
     setPlayerView,
   } = usePlayer()
   const { playNext, playPrevious, items, currentIndex, playFromQueue, removeFromQueue } = useQueue()
-  const [activeTab, setActiveTab] = useState<Tab>("playing")
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab)
   const [isLiked, setIsLiked] = useState(false)
   const [currentLyricIndex, setCurrentLyricIndex] = useState(0)
   const [lyrics, setLyrics] = useState<string[]>([])
@@ -104,10 +105,11 @@ export function NowPlayingSheet({ open, onClose }: NowPlayingSheetProps) {
   useEffect(() => {
     if (!open) {
       setPlayerView("floating")
+      setActiveTab(initialTab)
       return
     }
     setPlayerView(activeTab === "playing" ? "expanded" : "floating")
-  }, [open, activeTab, setPlayerView])
+  }, [open, activeTab, setPlayerView, initialTab])
 
   const handleLike = () => {
     if (currentSong) {

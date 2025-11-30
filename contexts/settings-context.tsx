@@ -3,6 +3,7 @@
 import type React from "react"
 import { createContext, useContext, useState, useEffect, useCallback } from "react"
 import type { Settings, AccentColor, Theme, StreamQuality, Language } from "@/types"
+import type { UserProfile } from "@/types/user"
 import {
   getSettings,
   saveSettings,
@@ -16,6 +17,9 @@ import { DEFAULT_SETTINGS, ACCENT_COLORS } from "@/lib/constants"
 
 interface SettingsContextType extends Settings {
   userId: string
+  deviceId: string
+  role: UserProfile["role"]
+  profile?: UserProfile | null
   updateSettings: (settings: Partial<Settings>) => void
   setLanguage: (language: Language) => void
   setTheme: (theme: Theme) => void
@@ -25,6 +29,8 @@ interface SettingsContextType extends Settings {
   exportData: () => string
   importData: (json: string) => boolean
   clearAllCache: () => void
+  setUserId: (id: string) => void
+  setProfile: (profile: UserProfile | null) => void
 }
 
 const SettingsContext = createContext<SettingsContextType | null>(null)
@@ -32,10 +38,15 @@ const SettingsContext = createContext<SettingsContextType | null>(null)
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS)
   const [userId, setUserId] = useState<string>("")
+  const [deviceId, setDeviceId] = useState<string>("")
+  const [profile, setProfile] = useState<UserProfile | null>(null)
 
   useEffect(() => {
     setSettings(getSettings())
-    setUserId(getUserId())
+    // deviceId always present for local-only needs
+    setDeviceId(getUserId())
+    // userId only if we have a stored session (profile not persisted yet)
+    setUserId("")
   }, [])
 
   // Apply accent color to CSS variables
@@ -82,7 +93,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   const regenerateSession = useCallback(() => {
     const newId = regenerateUserId()
-    setUserId(newId)
+    setDeviceId(newId)
+    setUserId("")
+    setProfile(null)
   }, [])
 
   const exportData = useCallback(() => {
@@ -107,6 +120,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       value={{
         ...settings,
         userId,
+        deviceId,
+        role: profile?.role ?? "guest",
+        profile,
         updateSettings,
         setLanguage,
         setTheme,
@@ -116,6 +132,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         exportData,
         importData,
         clearAllCache,
+        setUserId,
+        setProfile,
       }}
     >
       {children}

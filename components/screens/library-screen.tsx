@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Plus, Grid3X3, List, Heart, Clock, Music, User, FolderOpen, Download } from "lucide-react"
 import { SongCard } from "@/components/cards/song-card"
@@ -27,6 +27,7 @@ const filters: { id: Filter; label: string; icon: React.ElementType }[] = [
 export function LibraryScreen() {
   const [activeFilter, setActiveFilter] = useState<Filter>("all")
   const [viewMode, setViewMode] = useState<ViewMode>("grid")
+  const [hydrated, setHydrated] = useState(false)
   const { setQueue } = useQueue()
   const { userId } = useSettings()
 
@@ -66,6 +67,12 @@ export function LibraryScreen() {
   const isLoading = userStateQuery.isPending && !userStateQuery.data
 
   const displayedLikedSongs = likedSongs.length > 0 ? likedSongs : recentSongs.slice(0, 5)
+  const hasClientData = hydrated || Boolean(userStateQuery.data)
+  const safeLikedSongs = hasClientData ? displayedLikedSongs : []
+
+  useEffect(() => {
+    setHydrated(true)
+  }, [])
 
   return (
     <div className="px-4 md:px-8 py-6 space-y-6">
@@ -115,29 +122,31 @@ export function LibraryScreen() {
               </div>
               <div className="text-left">
                 <h2 className="text-lg font-bold">Canciones que te gustan</h2>
-                <p className="text-sm text-foreground-muted">{displayedLikedSongs.length} canciones</p>
+                <p className="text-sm text-foreground-muted">
+                  {hydrated ? `${displayedLikedSongs.length} canciones` : "…"}
+                </p>
               </div>
             </button>
 
             {viewMode === "list" ? (
               <div className="space-y-1 bg-card/50 rounded-xl p-2">
-                {displayedLikedSongs.map((song, index) => (
+                {safeLikedSongs.map((song, index) => (
                   <SongCard
                     key={song.id}
                     song={song}
                     index={index + 1}
                     showIndex
-                    onPlay={() => setQueue(displayedLikedSongs, index)}
+                    onPlay={() => setQueue(safeLikedSongs, index)}
                   />
                 ))}
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {displayedLikedSongs.map((song, index) => (
+                {safeLikedSongs.map((song, index) => (
                   <div
                     key={song.id}
                     className="group cursor-pointer"
-                    onClick={() => setQueue(displayedLikedSongs, index)}
+                    onClick={() => setQueue(safeLikedSongs, index)}
                   >
                     <div className="relative aspect-square rounded-xl overflow-hidden mb-2 shadow-lg">
                       <img

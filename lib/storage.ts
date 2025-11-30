@@ -109,6 +109,29 @@ export function addToRecentlyPlayed(song: Song): void {
   localStorage.setItem(STORAGE_KEYS.RECENTLY_PLAYED, JSON.stringify(updated))
 }
 
+// Recent Searches
+export function getRecentSearches(): string[] {
+  if (typeof window === "undefined") return []
+
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.RECENT_SEARCHES)
+    return stored ? JSON.parse(stored) : []
+  } catch {
+    return []
+  }
+}
+
+export function addRecentSearch(term: string): string[] {
+  if (typeof window === "undefined") return []
+  const normalized = term.trim()
+  if (!normalized) return getRecentSearches()
+
+  const recent = getRecentSearches().filter((t) => t.toLowerCase() !== normalized.toLowerCase())
+  const updated = [normalized, ...recent].slice(0, 7)
+  localStorage.setItem(STORAGE_KEYS.RECENT_SEARCHES, JSON.stringify(updated))
+  return updated
+}
+
 // Export/Import State
 export function exportState(): string {
   if (typeof window === "undefined") return "{}"
@@ -119,6 +142,7 @@ export function exportState(): string {
     queue: getQueue(),
     likedSongs: getLikedSongs(),
     recentlyPlayed: getRecentlyPlayed(),
+    recentSearches: getRecentSearches(),
     exportedAt: new Date().toISOString(),
   }
 
@@ -136,6 +160,7 @@ export function importState(jsonString: string): boolean {
     if (state.queue) localStorage.setItem(STORAGE_KEYS.QUEUE, JSON.stringify(state.queue))
     if (state.likedSongs) localStorage.setItem(STORAGE_KEYS.LIKED_SONGS, JSON.stringify(state.likedSongs))
     if (state.recentlyPlayed) localStorage.setItem(STORAGE_KEYS.RECENTLY_PLAYED, JSON.stringify(state.recentlyPlayed))
+    if (state.recentSearches) localStorage.setItem(STORAGE_KEYS.RECENT_SEARCHES, JSON.stringify(state.recentSearches))
 
     return true
   } catch {

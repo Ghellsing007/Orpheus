@@ -184,9 +184,11 @@ const fallbackArtists =
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   <button
                     onClick={() => setQueue(trending, index)}
-                    className="absolute bottom-2 right-2 w-10 h-10 rounded-full gradient-primary flex items-center justify-center shadow-lg opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all"
+                    className="absolute inset-0 flex items-end justify-end p-2 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                   >
-                    <Play className="w-4 h-4 text-white ml-0.5" fill="currentColor" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full gradient-primary flex items-center justify-center shadow-lg">
+                      <Play className="w-5 h-5 text-white ml-0.5" fill="currentColor" />
+                    </div>
                   </button>
                 </div>
                 <h3 className="font-medium text-sm truncate">{song.title}</h3>
@@ -248,9 +250,9 @@ const fallbackArtists =
                   />
                   <button
                     onClick={() => setQueue(recent, index)}
-                    className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                    className="absolute inset-0 bg-black/30 sm:bg-black/40 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex items-end justify-end p-2"
                   >
-                    <div className="w-12 h-12 rounded-full gradient-primary flex items-center justify-center shadow-lg">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full gradient-primary flex items-center justify-center shadow-lg">
                       <Play className="w-5 h-5 text-white ml-0.5" fill="currentColor" />
                     </div>
                   </button>
@@ -276,14 +278,19 @@ const fallbackArtists =
           <CarouselSection title="Mood Playlists" subtitle="Musica para cada momento">
             {moodPlaylists.map((mood, idx) => (
               <div key={`${mood.title}-${idx}`} className="w-full space-y-2">
-                <h3 className="text-lg font-semibold px-2">{mood.title}</h3>
-                <div className="bg-card/50 rounded-xl p-2 space-y-1">
-                  {mood.songs.map((song, index) => (
-                    <SongCard key={`${song.id}-${index}`} song={song} onPlay={() => setQueue(mood.songs, index)} />
-                  ))}
-                </div>
+              <h3 className="text-lg font-semibold px-2">{mood.title}</h3>
+              <div className="bg-card/50 rounded-xl p-2 space-y-1">
+                {mood.songs.map((song, index) => (
+                  <SongCard
+                    key={`${song.id}-${index}`}
+                    song={song}
+                    onPlay={() => setQueue(mood.songs, index)}
+                    showPlayButton={false}
+                  />
+                ))}
               </div>
-            ))}
+            </div>
+          ))}
           </CarouselSection>
         )}
       </div>

@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils"
 import { useQueue } from "@/contexts/queue-context"
 import { api } from "@/services/api"
 import type { Artist, Playlist, Song } from "@/types"
+import { addRecentSearch, getRecentSearches } from "@/lib/storage"
 
 type Tab = "all" | "songs" | "playlists" | "artists"
 
@@ -24,13 +25,12 @@ const categories = [
   { name: "Jazz", color: "from-blue-600 to-indigo-600", query: "jazz" },
 ]
 
-const recentSearches = ["The Weeknd", "Dua Lipa", "Pop Mix", "Workout", "Chill"]
-
 export function SearchScreen() {
   const [query, setQuery] = useState("")
   const [activeTab, setActiveTab] = useState<Tab>("all")
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [debouncedQuery, setDebouncedQuery] = useState("")
+  const [recentSearches, setRecentSearches] = useState<string[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
   const { setQueue } = useQueue()
 
@@ -52,6 +52,10 @@ export function SearchScreen() {
     const handler = setTimeout(() => setDebouncedQuery(query.trim()), 250)
     return () => clearTimeout(handler)
   }, [query])
+
+  useEffect(() => {
+    setRecentSearches(getRecentSearches())
+  }, [])
 
   const initialQuery = useQuery({
     queryKey: ["search", "initial"],
@@ -91,9 +95,17 @@ export function SearchScreen() {
   const suggestions = suggestionsQuery.data ?? []
   const songs = query ? searchQuery.data?.songs ?? [] : initialQuery.data?.songs ?? []
   const playlists = query ? searchQuery.data?.playlists ?? [] : initialQuery.data?.playlists ?? []
+  const initialSongs = initialQuery.data?.songs ?? []
   const artists = buildArtists(songs.length > 0 ? songs : initialQuery.data?.songs ?? [])
   const isLoading = query ? searchQuery.isPending : initialQuery.isPending
   const error = query && searchQuery.isError ? "No pudimos completar la busqueda" : null
+
+  useEffect(() => {
+    if (!debouncedQuery) return
+    if (searchQuery.isSuccess) {
+      setRecentSearches(addRecentSearch(debouncedQuery))
+    }
+  }, [debouncedQuery, searchQuery.isSuccess])
 
   return (
     <div className="px-4 md:px-8 py-6 space-y-6">

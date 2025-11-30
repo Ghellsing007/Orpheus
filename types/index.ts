@@ -119,6 +119,8 @@ export interface UserState {
   importedPlaylists: Playlist[]
 }
 
+export type UserRole = "guest" | "user" | "admin"
+
 // =============== SETTINGS ===============
 
 export type AccentColor = "blue" | "green" | "violet" | "red" | "orange"

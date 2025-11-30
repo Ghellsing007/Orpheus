@@ -216,25 +216,29 @@ export function SongDetailScreen({ songId }: SongDetailScreenProps) {
 
       {/* Related Songs */}
       <div className="px-4 md:px-8 space-y-6">
+        <section>
+          <h2 className="text-xl font-bold mb-4">Más de {song.artist}</h2>
+          <div className="bg-card/50 rounded-xl p-2">
+            {relatedSongs.length > 0 ? (
+              relatedSongs.map((s, index) => (
+                <SongCard key={s.id} song={s} onPlay={() => setQueue(relatedSongs, index)} />
+              ))
+            ) : (
+              <div className="text-center py-6 text-foreground-muted">Sin canciones del artista</div>
+            )}
+          </div>
+        </section>
+
         {recommendedSongs.length > 0 && (
           <section>
-            <h2 className="text-xl font-bold mb-4">Más de {song.artist}</h2>
+            <h2 className="text-xl font-bold mb-4">Canciones relacionadas</h2>
             <div className="bg-card/50 rounded-xl p-2">
-              {recommendedSongs.slice(0, 3).map((s, index) => (
+              {recommendedSongs.map((s, index) => (
                 <SongCard key={s.id} song={s} onPlay={() => setQueue(recommendedSongs, index)} />
               ))}
             </div>
           </section>
         )}
-
-        <section>
-          <h2 className="text-xl font-bold mb-4">canciones relacionadas</h2>
-          <div className="bg-card/50 rounded-xl p-2">
-            {relatedSongs.map((s, index) => (
-              <SongCard key={s.id} song={s} onPlay={() => setQueue(relatedSongs, index)} />
-            ))}
-          </div>
-        </section>
       </div>
     </div>
   )

@@ -17,16 +17,27 @@ import Link from "next/link"
 import { usePlayer } from "@/contexts/player-context"
 import { useQueue } from "@/contexts/queue-context"
 import { formatDuration, cn } from "@/lib/utils"
-import { useMemo, useState, useRef, useLayoutEffect } from "react"
+import { useMemo, useState, useRef, useLayoutEffect, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { NowPlayingSheet } from "./now-playing-sheet"
 import { getLikedSongs, toggleLikedSong } from "@/lib/storage"
 
 export function MiniPlayer() {
-  const { currentSong, isPlaying, currentTime, duration, togglePlay, shuffle, repeat, toggleShuffle, cycleRepeat } =
-    usePlayer()
+  const {
+    currentSong,
+    isPlaying,
+    currentTime,
+    duration,
+    togglePlay,
+    shuffle,
+    repeat,
+    toggleShuffle,
+    cycleRepeat,
+    seek,
+  } = usePlayer()
   const { playNext, playPrevious } = useQueue()
   const [showNowPlaying, setShowNowPlaying] = useState(false)
+  const [showQueueOnly, setShowQueueOnly] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const [menuPos, setMenuPos] = useState<{ top: number; left: number; origin: "top" | "bottom" } | null>(null)
@@ -63,6 +74,80 @@ export function MiniPlayer() {
 
   const artistSlug = currentSong.channelId || currentSong.artist
   const artistHref = artistSlug ? `/artist/${encodeURIComponent(artistSlug)}` : null
+
+  // Media Session metadata/control integration
+  useLayoutEffect(() => {
+    if (!("mediaSession" in navigator) || !currentSong) return
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: currentSong.title,
+        artist: currentSong.artist,
+        artwork: [
+          { src: currentSong.thumbnail || "", sizes: "96x96", type: "image/png" },
+          { src: currentSong.thumbnailHigh || currentSong.thumbnail || "", sizes: "512x512", type: "image/png" },
+        ].filter((a) => a.src),
+      })
+      navigator.mediaSession.setActionHandler("play", () => togglePlay())
+      navigator.mediaSession.setActionHandler("pause", () => togglePlay())
+      navigator.mediaSession.setActionHandler("previoustrack", () => playPrevious())
+      navigator.mediaSession.setActionHandler("nexttrack", () => playNext())
+      navigator.mediaSession.setActionHandler("seekto", (details: any) => {
+        if (typeof details?.seekTime === "number") {
+          seek(details.seekTime)
+        }
+      })
+    } catch (_) {
+      /* noop */
+    }
+  }, [currentSong, togglePlay, playPrevious, playNext, seek])
+
+  // Escucha acciones provenientes de notificaciones (enviadas por el service worker)
+  useEffect(() => {
+    const handler = (event: MessageEvent) => {
+      const data = event.data
+      if (!data || data.type !== "MEDIA_ACTION") return
+      if (data.action === "play" || data.action === "pause" || data.action === "playpause") togglePlay()
+      if (data.action === "next" || data.action === "nexttrack") playNext()
+      if (data.action === "prev" || data.action === "previoustrack") playPrevious()
+      if (data.action === "seekto" && typeof data.seekTime === "number") seek(data.seekTime)
+    }
+    if (typeof navigator !== "undefined" && navigator.serviceWorker) {
+      navigator.serviceWorker.addEventListener("message", handler)
+    }
+    return () => {
+      if (typeof navigator !== "undefined" && navigator.serviceWorker) {
+        navigator.serviceWorker.removeEventListener("message", handler)
+      }
+    }
+  }, [togglePlay, playNext, playPrevious, seek])
+
+  // Mostrar notificación con acciones (si el usuario dio permiso)
+  useEffect(() => {
+    const showNowPlayingNotification = async () => {
+      if (!currentSong) return
+      if (typeof Notification === "undefined") return
+      if (Notification.permission !== "granted") return
+      if (!("serviceWorker" in navigator)) return
+      const reg = await navigator.serviceWorker.ready
+      const actions = [
+        { action: "prev", title: "Anterior" },
+        { action: isPlaying ? "pause" : "play", title: isPlaying ? "Pausar" : "Reproducir" },
+        { action: "next", title: "Siguiente" },
+      ]
+      const artwork = currentSong.thumbnailHigh || currentSong.thumbnail
+      reg.showNotification(currentSong.title, {
+        body: currentSong.artist || "Orpheus",
+        tag: "orpheus-now-playing",
+        renotify: true,
+        data: { type: "MEDIA_NOTIFICATION" },
+        actions,
+        silent: true,
+        icon: artwork || "/icon-192.png",
+        badge: "/icon-192.png",
+      })
+    }
+    showNowPlayingNotification().catch(() => {})
+  }, [currentSong, isPlaying])
 
   // Posiciona el menú para que no quede fuera de la pantalla (especialmente en el mini player).
   useLayoutEffect(() => {
@@ -125,7 +210,8 @@ export function MiniPlayer() {
           <div className="flex items-center gap-2 md:gap-4">
             <button
               onClick={playPrevious}
-              className="hidden md:flex w-10 h-10 items-center justify-center text-foreground-muted hover:text-foreground transition-colors"
+              className="w-10 h-10 items-center justify-center text-foreground-muted hover:text-foreground transition-colors flex"
+              onMouseDown={() => navigator.vibrate?.(10)}
             >
               <SkipBack className="w-5 h-5" />
             </button>
@@ -133,6 +219,7 @@ export function MiniPlayer() {
             <button
               onClick={togglePlay}
               className="w-12 h-12 md:w-14 md:h-14 rounded-full gradient-primary flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shadow-lg shadow-primary/25"
+              onMouseDown={() => navigator.vibrate?.(10)}
             >
               {isPlaying ? (
                 <Pause className="w-6 h-6 text-primary-foreground" fill="currentColor" />
@@ -143,7 +230,8 @@ export function MiniPlayer() {
 
             <button
               onClick={playNext}
-              className="hidden md:flex w-10 h-10 items-center justify-center text-foreground-muted hover:text-foreground transition-colors"
+              className="w-10 h-10 items-center justify-center text-foreground-muted hover:text-foreground transition-colors flex"
+              onMouseDown={() => navigator.vibrate?.(10)}
             >
               <SkipForward className="w-5 h-5" />
             </button>
@@ -204,21 +292,22 @@ export function MiniPlayer() {
                           e.stopPropagation()
                           cycleRepeat()
                         }}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
-                      >
-                        <Repeat className={cn("w-4 h-4", repeat !== "off" && "text-primary")} />
-                        {repeat === "one" ? "Repetir pista" : repeat === "all" ? "Repetir todo" : "Repetir"}
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setShowNowPlaying(true)
-                          setMenuOpen(false)
-                        }}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
-                      >
-                        <ListMusic className="w-4 h-4" />
-                        Ver cola
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
+                  >
+                    <Repeat className={cn("w-4 h-4", repeat !== "off" && "text-primary")} />
+                    {repeat === "one" ? "Repetir pista" : repeat === "all" ? "Repetir todo" : "Repetir"}
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setShowNowPlaying(true)
+                      setActiveTab("queue")
+                      setMenuOpen(false)
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
+                  >
+                    <ListMusic className="w-4 h-4" />
+                    Ver cola
                       </button>
                       <button
                         onClick={(e) => {
@@ -249,7 +338,11 @@ export function MiniPlayer() {
       </div>
 
       {/* Now Playing Sheet */}
-      <NowPlayingSheet open={showNowPlaying} onClose={() => setShowNowPlaying(false)} />
+      <NowPlayingSheet
+        open={showNowPlaying}
+        onClose={() => setShowNowPlaying(false)}
+        initialTab={showQueueOnly ? "queue" : "playing"}
+      />
 
       {/* Download Modal */}
       {showDownloadModal && currentSong && (
