@@ -37,7 +37,7 @@ export function ArtistCard({ artist, isLiked = false, onToggleLike }: ArtistCard
         </button>
       )}
       <h3 className="font-semibold text-sm truncate group-hover:text-primary transition-colors">{artist.name}</h3>
-      <p className="text-xs text-foreground-muted">
+      <p className="text-xs text-foreground-muted truncate">
         {artist.monthlyListeners ? `${formatNumber(artist.monthlyListeners)} oyentes` : "Artista"}
       </p>
     </>

@@ -124,12 +124,6 @@ export function NowPlayingSheet({ open, onClose, initialTab = "playing" }: NowPl
   const artistSlug = currentSong.channelId || currentSong.artist
   const artistHref = artistSlug ? `/artist/${encodeURIComponent(artistSlug)}` : null
 
-  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const percent = (e.clientX - rect.left) / rect.width
-    seek(percent * duration)
-  }
-
   return (
     <div className="fixed inset-0 z-50 bg-background slide-up">
       <div className="h-full flex flex-col">
@@ -171,12 +165,12 @@ export function NowPlayingSheet({ open, onClose, initialTab = "playing" }: NowPl
               <div className="space-y-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-2xl font-bold truncate">{currentSong.title}</h2>
+                    <h2 className="text-2xl font-bold truncate max-w-full break-words line-clamp-2">{currentSong.title}</h2>
                     {artistHref ? (
                       <Link
                         href={artistHref}
                         onClick={(e) => e.stopPropagation()}
-                        className="text-foreground-muted text-lg truncate hover:text-primary transition-colors"
+                        className="text-foreground-muted text-lg truncate hover:text-primary transition-colors block max-w-full"
                       >
                         {currentSong.artist}
                       </Link>
@@ -197,14 +191,19 @@ export function NowPlayingSheet({ open, onClose, initialTab = "playing" }: NowPl
 
                 {/* Progress Bar */}
                 <div className="space-y-2">
-                  <div className="h-1.5 bg-card rounded-full cursor-pointer group" onClick={handleSeek}>
-                    <div
-                      className="h-full bg-primary rounded-full relative transition-all"
-                      style={{ width: `${progress}%` }}
-                    >
-                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg" />
-                    </div>
-                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={duration || 0}
+                    step="0.1"
+                    value={currentTime}
+                    onChange={(e) => seek(Number.parseFloat(e.target.value))}
+                    className="w-full h-2 bg-card rounded-full appearance-none cursor-pointer accent-primary [&::-webkit-slider-runnable-track]:bg-card [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-track]:bg-card [&::-moz-range-track]:rounded-full [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full"
+                    style={{
+                      accentColor: "var(--primary)",
+                      background: `linear-gradient(to right, var(--primary) ${progress}%, var(--card) ${progress}%)`,
+                    }}
+                  />
                   <div className="flex justify-between text-xs text-foreground-muted">
                     <span>{formatDuration(currentTime)}</span>
                     <span>{formatDuration(duration)}</span>

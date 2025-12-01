@@ -38,7 +38,7 @@ export function PlaylistCard({
   }
 
   return (
-    <Link href={`/playlist/${playlist.id}`} className={`group flex-shrink-0 ${sizeClasses[size]}`}>
+    <Link href={`/playlist/${playlist.id}`} className={`group flex-shrink-0 ${sizeClasses[size]} min-w-0`}>
       <div className="relative aspect-square rounded-xl overflow-hidden mb-3 shadow-lg shadow-black/20">
         <img
           src={playlist.thumbnail || "/placeholder.svg?height=300&width=300&query=music playlist cover"}
@@ -72,8 +72,8 @@ export function PlaylistCard({
         </button>
       </div>
 
-      <h3 className="font-semibold text-sm truncate group-hover:text-primary transition-colors">{playlist.title}</h3>
-      <p className="text-xs text-foreground-muted truncate mt-0.5">
+      <h3 className="font-semibold text-sm line-clamp-1 group-hover:text-primary transition-colors">{playlist.title}</h3>
+      <p className="text-xs text-foreground-muted line-clamp-1 mt-0.5">
         {playlist.songCount ? `${playlist.songCount} canciones` : "Playlist"}
       </p>
     </Link>

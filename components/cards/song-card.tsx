@@ -158,12 +158,20 @@ export function SongCard({
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className={cn("font-medium text-sm truncate", isCurrentSong && "text-primary")}>{song.title}</p>
+        <p
+          className={cn(
+            "font-medium text-sm leading-tight max-w-full",
+            compact ? "truncate" : "line-clamp-2",
+            isCurrentSong && "text-primary",
+          )}
+        >
+          {song.title}
+        </p>
         {artistHref ? (
           <Link
             href={artistHref}
             onClick={(e) => e.stopPropagation()}
-            className="text-xs text-foreground-muted truncate hover:text-primary transition-colors"
+            className="text-xs text-foreground-muted truncate hover:text-primary transition-colors block max-w-full"
           >
             {song.artist}
           </Link>

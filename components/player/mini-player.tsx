@@ -168,8 +168,20 @@ export function MiniPlayer() {
     <>
       <div className="fixed bottom-16 md:bottom-0 left-0 right-0 z-30 glass border-t border-border">
         {/* Progress bar */}
-        <div className="h-1 bg-progress-buffer">
-          <div className="h-full bg-primary transition-all duration-100" style={{ width: `${progress}%` }} />
+        <div className="h-2 px-3 md:px-6 py-2">
+          <input
+            type="range"
+            min={0}
+            max={duration || 0}
+            step="0.1"
+            value={currentTime}
+            onChange={(e) => seek(Number.parseFloat(e.target.value))}
+            className="w-full h-1 bg-card rounded-full appearance-none cursor-pointer accent-primary [&::-webkit-slider-runnable-track]:bg-card [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-track]:bg-card [&::-moz-range-track]:rounded-full [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full"
+            style={{
+              accentColor: "var(--primary)",
+              background: `linear-gradient(to right, var(--primary) ${progress}%, var(--card) ${progress}%)`,
+            }}
+          />
         </div>
 
         <div className="flex items-center gap-3 px-3 py-2 md:px-6 md:py-3">

@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { Providers } from "./providers"
 import { InstallPrompt } from "@/components/pwa/install-prompt"
+import { UpdateModal } from "@/components/updates/update-modal"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
@@ -57,6 +58,7 @@ export default function RootLayout({
       <body className={`${inter.className} font-sans antialiased`}>
         <Providers>{children}</Providers>
         <InstallPrompt />
+        <UpdateModal />
       </body>
     </html>
   )

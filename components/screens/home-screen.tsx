@@ -207,7 +207,7 @@ const fallbackArtists =
                     </div>
                   </button>
                 </div>
-                <h3 className="font-medium text-sm truncate">{song.title}</h3>
+                <h3 className="font-medium text-sm line-clamp-2 leading-tight">{song.title}</h3>
                 {artistHrefFromSong(song) ? (
                   <Link
                     href={artistHrefFromSong(song)!}
@@ -273,7 +273,7 @@ const fallbackArtists =
                     </div>
                   </button>
                 </div>
-                <h3 className="font-medium text-sm truncate">{song.title}</h3>
+                <h3 className="font-medium text-sm line-clamp-2 leading-tight">{song.title}</h3>
                 {artistHrefFromSong(song) ? (
                   <Link
                     href={artistHrefFromSong(song)!}
