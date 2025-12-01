@@ -55,6 +55,13 @@ export function MiniPlayer() {
     setMenuOpen(false)
   }
 
+  const vibrateLight = () => {
+    if (typeof navigator === "undefined" || typeof navigator.vibrate !== "function") return
+    const isCoarse = typeof matchMedia !== "undefined" && matchMedia("(pointer: coarse)").matches
+    if (!isCoarse) return
+    navigator.vibrate(15)
+  }
+
   const handleDownload = async () => {
     if (!currentSong) return
     setDownloading(true)
@@ -84,6 +91,7 @@ export function MiniPlayer() {
         artist: currentSong.artist,
         artwork: [
           { src: currentSong.thumbnail || "", sizes: "96x96", type: "image/png" },
+          { src: currentSong.thumbnailHigh || currentSong.thumbnail || "", sizes: "256x256", type: "image/png" },
           { src: currentSong.thumbnailHigh || currentSong.thumbnail || "", sizes: "512x512", type: "image/png" },
         ].filter((a) => a.src),
       })
@@ -91,6 +99,17 @@ export function MiniPlayer() {
       navigator.mediaSession.setActionHandler("pause", () => togglePlay())
       navigator.mediaSession.setActionHandler("previoustrack", () => playPrevious())
       navigator.mediaSession.setActionHandler("nexttrack", () => playNext())
+      navigator.mediaSession.setActionHandler("stop", () => {
+        if (isPlaying) togglePlay()
+      })
+      navigator.mediaSession.setActionHandler("seekbackward", (details: any) => {
+        const delta = typeof details?.seekOffset === "number" ? details.seekOffset : 7
+        seek(Math.max(0, currentTime - delta))
+      })
+      navigator.mediaSession.setActionHandler("seekforward", (details: any) => {
+        const delta = typeof details?.seekOffset === "number" ? details.seekOffset : 7
+        seek(Math.min(duration, currentTime + delta))
+      })
       navigator.mediaSession.setActionHandler("seekto", (details: any) => {
         if (typeof details?.seekTime === "number") {
           seek(details.seekTime)
@@ -110,6 +129,15 @@ export function MiniPlayer() {
       if (data.action === "next" || data.action === "nexttrack") playNext()
       if (data.action === "prev" || data.action === "previoustrack") playPrevious()
       if (data.action === "seekto" && typeof data.seekTime === "number") seek(data.seekTime)
+      if (data.action === "stop") {
+        if (isPlaying) togglePlay()
+      }
+      if (data.action === "seekforward" && typeof data.seekOffset === "number") {
+        seek(Math.min(duration, currentTime + data.seekOffset))
+      }
+      if (data.action === "seekbackward" && typeof data.seekOffset === "number") {
+        seek(Math.max(0, currentTime - data.seekOffset))
+      }
     }
     if (typeof navigator !== "undefined" && navigator.serviceWorker) {
       navigator.serviceWorker.addEventListener("message", handler)
@@ -126,6 +154,9 @@ export function MiniPlayer() {
     const showNowPlayingNotification = async () => {
       if (!currentSong) return
       if (typeof Notification === "undefined") return
+      if (Notification.permission === "default") {
+        await Notification.requestPermission().catch(() => {})
+      }
       if (Notification.permission !== "granted") return
       if (!("serviceWorker" in navigator)) return
       const reg = await navigator.serviceWorker.ready
@@ -133,17 +164,23 @@ export function MiniPlayer() {
         { action: "prev", title: "Anterior" },
         { action: isPlaying ? "pause" : "play", title: isPlaying ? "Pausar" : "Reproducir" },
         { action: "next", title: "Siguiente" },
+        { action: "stop", title: "Detener" },
       ]
       const artwork = currentSong.thumbnailHigh || currentSong.thumbnail
       reg.showNotification(currentSong.title, {
         body: currentSong.artist || "Orpheus",
         tag: "orpheus-now-playing",
         renotify: true,
-        data: { type: "MEDIA_NOTIFICATION" },
+        data: {
+          type: "MEDIA_NOTIFICATION",
+          songId: currentSong.id,
+          seekOffset: 7,
+        },
         actions,
         silent: true,
         icon: artwork || "/icon-192.png",
         badge: "/icon-192.png",
+        image: artwork || undefined,
       })
     }
     showNowPlayingNotification().catch(() => {})
@@ -168,7 +205,7 @@ export function MiniPlayer() {
     <>
       <div className="fixed bottom-16 md:bottom-0 left-0 right-0 z-30 glass border-t border-border">
         {/* Progress bar */}
-        <div className="h-2 px-3 md:px-6 py-2">
+        <div className="h-2 px-3 md:px-6 pt-2 pb-3">
           <input
             type="range"
             min={0}
@@ -221,32 +258,41 @@ export function MiniPlayer() {
           {/* Controls */}
           <div className="flex items-center gap-2 md:gap-4">
             <button
-              onClick={playPrevious}
-              className="w-10 h-10 items-center justify-center text-foreground-muted hover:text-foreground transition-colors flex"
-              onMouseDown={() => navigator.vibrate?.(10)}
-            >
-              <SkipBack className="w-5 h-5" />
-            </button>
+            onClick={() => {
+              vibrateLight()
+              playPrevious()
+            }}
+            className="w-10 h-10 items-center justify-center text-foreground-muted hover:text-foreground transition-colors flex"
+            onMouseDown={() => navigator.vibrate?.(10)}
+          >
+            <SkipBack className="w-5 h-5" />
+          </button>
 
             <button
-              onClick={togglePlay}
-              className="w-12 h-12 md:w-14 md:h-14 rounded-full gradient-primary flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shadow-lg shadow-primary/25"
-              onMouseDown={() => navigator.vibrate?.(10)}
-            >
-              {isPlaying ? (
-                <Pause className="w-6 h-6 text-primary-foreground" fill="currentColor" />
+            onClick={() => {
+              vibrateLight()
+              togglePlay()
+            }}
+            className="w-12 h-12 md:w-14 md:h-14 rounded-full gradient-primary flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shadow-lg shadow-primary/25"
+            onMouseDown={() => navigator.vibrate?.(10)}
+          >
+            {isPlaying ? (
+              <Pause className="w-6 h-6 text-primary-foreground" fill="currentColor" />
               ) : (
                 <Play className="w-6 h-6 text-primary-foreground ml-1" fill="currentColor" />
               )}
             </button>
 
             <button
-              onClick={playNext}
-              className="w-10 h-10 items-center justify-center text-foreground-muted hover:text-foreground transition-colors flex"
-              onMouseDown={() => navigator.vibrate?.(10)}
-            >
-              <SkipForward className="w-5 h-5" />
-            </button>
+            onClick={() => {
+              vibrateLight()
+              playNext()
+            }}
+            className="w-10 h-10 items-center justify-center text-foreground-muted hover:text-foreground transition-colors flex"
+            onMouseDown={() => navigator.vibrate?.(10)}
+          >
+            <SkipForward className="w-5 h-5" />
+          </button>
           </div>
 
           {/* Menu */}

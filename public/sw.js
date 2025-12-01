@@ -196,20 +196,33 @@ function normalizeVersion(version) {
 
 // Manejo de notificaciones con acciones para controles multimedia
 self.addEventListener("notificationclick", (event) => {
-  const action = event.action;
-  event.notification.close();
+  const action = event.action
+  const data = event.notification?.data || {}
+  event.notification.close()
 
   event.waitUntil(
     (async () => {
-      const allClients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-      const client = allClients.length ? allClients[0] : await self.clients.openWindow("/");
-      if (client && action) {
-        client.postMessage({ type: "MEDIA_ACTION", action });
-        client.focus && client.focus();
+      const allClients = await self.clients.matchAll({ type: "window", includeUncontrolled: true })
+      const client = allClients.length ? allClients[0] : await self.clients.openWindow("/")
+      if (client) {
+        client.postMessage({ type: "MEDIA_ACTION", action: action || "focus", ...data })
+        client.focus && client.focus()
       }
     })(),
-  );
-});
+  )
+})
+
+self.addEventListener("notificationclose", (event) => {
+  const data = event.notification?.data || {}
+  event.waitUntil(
+    (async () => {
+      const allClients = await self.clients.matchAll({ type: "window", includeUncontrolled: true })
+      if (allClients.length) {
+        allClients[0].postMessage({ type: "MEDIA_ACTION", action: "notificationclose", ...data })
+      }
+    })(),
+  )
+})
 
 async function cacheImage(request) {
   const cache = await caches.open(IMAGE_CACHE);
