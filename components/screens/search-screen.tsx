@@ -25,6 +25,8 @@ const categories = [
   { name: "Jazz", color: "from-blue-600 to-indigo-600", query: "jazz" },
 ]
 
+const LAST_SEARCH_KEY = "orpheus_last_search"
+
 export function SearchScreen() {
   const [query, setQuery] = useState("")
   const [activeTab, setActiveTab] = useState<Tab>("all")
@@ -52,6 +54,16 @@ export function SearchScreen() {
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedQuery(query.trim()), 250)
     return () => clearTimeout(handler)
+  }, [query])
+
+  // Hydrate with the last search performed (if any)
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const last = localStorage.getItem(LAST_SEARCH_KEY)
+    if (last && !query) {
+      setQuery(last)
+      setDebouncedQuery(last)
+    }
   }, [query])
 
   useEffect(() => {
@@ -116,6 +128,9 @@ export function SearchScreen() {
     if (!debouncedQuery) return
     if (searchQuery.isSuccess) {
       setRecentSearches(addRecentSearch(debouncedQuery))
+      if (typeof window !== "undefined") {
+        localStorage.setItem(LAST_SEARCH_KEY, debouncedQuery)
+      }
     }
   }, [debouncedQuery, searchQuery.isSuccess])
 

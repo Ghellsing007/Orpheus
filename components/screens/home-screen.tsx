@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { Play, Sparkles } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
@@ -100,6 +100,18 @@ export function HomeScreen() {
   const recent = recentFromApi.length > 0 ? recentFromApi : getRecentlyPlayed()
 
   const isLoading = curatedQuery.isPending && !curatedQuery.data
+  const [splashVisible, setSplashVisible] = useState(true)
+
+  useEffect(() => {
+    if (!isLoading) {
+      const timeout = window.setTimeout(() => setSplashVisible(false), 250)
+      return () => window.clearTimeout(timeout)
+    }
+    const timeout = window.setTimeout(() => setSplashVisible(false), 1200)
+    return () => window.clearTimeout(timeout)
+  }, [isLoading])
+
+  const showSkeleton = isLoading || splashVisible
   const error =
     (curatedQuery.isError && "No pudimos cargar datos curados") ||
     (recommendationsQuery.isError && "No pudimos cargar recomendaciones") ||
@@ -110,7 +122,7 @@ export function HomeScreen() {
     if (list.length > 0) setQueue(list, 0)
   }
 
-const fallbackArtists =
+  const fallbackArtists =
     artists.length > 0
       ? artists
       : trending.slice(0, 10).map((song) => {
@@ -123,14 +135,23 @@ const fallbackArtists =
           }
         })
 
-  if (isLoading) {
+  if (showSkeleton) {
     return (
-      <div className="space-y-8 pb-8">
-        <SkeletonHero />
-        <div className="space-y-10 px-4 md:px-8">
-          <SkeletonCarousel />
-          <SkeletonCarousel />
-          <SkeletonCarousel />
+      <div className="relative min-h-[80vh] overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-background/70" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3 text-foreground-muted">
+            <div className="w-12 h-12 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+            <p className="text-sm">Cargando tu música...</p>
+          </div>
+        </div>
+        <div className="relative space-y-8 pb-8 opacity-70">
+          <SkeletonHero />
+          <div className="space-y-10 px-4 md:px-8">
+            <SkeletonCarousel />
+            <SkeletonCarousel />
+            <SkeletonCarousel />
+          </div>
         </div>
       </div>
     )

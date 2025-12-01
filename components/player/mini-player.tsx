@@ -71,9 +71,26 @@ export function MiniPlayer() {
       const id = encodeURIComponent(currentSong.ytid || currentSong.id)
       const baseUrl = (process.env.NEXT_PUBLIC_API_URL || window.location.origin).replace(/\/$/, "")
       const target = `${baseUrl}/download/mp3/${id}`
-      window.open(target, "_blank", "noopener")
+
+      const res = await fetch(target)
+      if (!res.ok) {
+        throw new Error(`Download failed: ${res.status}`)
+      }
+      const blob = await res.blob()
+      const disposition = res.headers.get("content-disposition") || ""
+      const match = /filename\*=UTF-8''([^;]+)|filename=\"?([^\";]+)\"?/i.exec(disposition || "")
+      const filename = decodeURIComponent(match?.[1] || match?.[2] || `${currentSong.artist || "audio"} - ${currentSong.title || "track"}.mp3`)
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
       setShowDownloadModal(false)
-    } catch (_) {
+    } catch (err) {
+      console.error(err)
       setDownloadError("No se pudo generar la descarga")
     } finally {
       setDownloading(false)
