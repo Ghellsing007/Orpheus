@@ -44,6 +44,7 @@ export function MiniPlayer() {
   const [downloading, setDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState<string | null>(null)
   const [showDownloadModal, setShowDownloadModal] = useState(false)
+  const bgHintShownRef = useRef(false)
 
   if (!currentSong) return null
 
@@ -167,8 +168,9 @@ export function MiniPlayer() {
         { action: "stop", title: "Detener" },
       ]
       const artwork = currentSong.thumbnailHigh || currentSong.thumbnail
+      const hint = "Si se detiene en segundo plano, pulsa play aquí para reanudar."
       reg.showNotification(currentSong.title, {
-        body: currentSong.artist || "Orpheus",
+        body: bgHintShownRef.current ? currentSong.artist || "Orpheus" : `${currentSong.artist || "Orpheus"} · ${hint}`,
         tag: "orpheus-now-playing",
         renotify: true,
         data: {
@@ -182,6 +184,9 @@ export function MiniPlayer() {
         badge: "/icon-192.png",
         image: artwork || undefined,
       })
+      if (!bgHintShownRef.current) {
+        bgHintShownRef.current = true
+      }
     }
     showNowPlayingNotification().catch(() => {})
   }, [currentSong, isPlaying])
