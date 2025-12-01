@@ -11,7 +11,7 @@ interface ArtistCardProps {
   onToggleLike?: () => void
 }
 
-export function ArtistCard({ artist }: ArtistCardProps) {
+export function ArtistCard({ artist, isLiked = false, onToggleLike }: ArtistCardProps) {
   return (
     <Link href={`/artist/${artist.id}`} className="group text-center flex-shrink-0 w-32 relative">
       <div className="relative aspect-square rounded-full overflow-hidden mb-3 shadow-lg shadow-black/20 mx-auto">

@@ -22,14 +22,13 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
   const [error, setError] = useState<string | null>(null)
   const [userIdInput, setUserIdInput] = useState("")
   const [displayName, setDisplayName] = useState("")
-  const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
   const [avatarUrlInput, setAvatarUrlInput] = useState("")
 
   if (!open) return null
 
-  const initialsName = displayName || username || "Orpheus"
+  const initialsName = displayName || "Orpheus"
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,13 +40,16 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
         if (!newUserId) {
           throw new Error("Necesitas definir un usuario o ID para registrarte.")
         }
+        const avatarUrl =
+          avatarUrlInput ||
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(newUserId)}&background=111827&color=ffffff`
         const res = await api.registerUser({
           userId: newUserId,
-          displayName: displayName || username || "Mi Cuenta",
-          username: username || undefined,
+          displayName: displayName || newUserId,
+          username: undefined,
           email: email || undefined,
           phone: phone || undefined,
-          avatarUrl: avatarUrlInput || undefined,
+          avatarUrl,
           role: "user",
         })
         setUserId(res.userId)
@@ -138,15 +140,6 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     placeholder="Tu nombre"
-                    className="mt-1 w-full h-10 rounded-lg bg-background border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
-                  />
-                </label>
-                <label className="text-xs text-foreground-muted">
-                  Username (opcional)
-                  <input
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="usuario"
                     className="mt-1 w-full h-10 rounded-lg bg-background border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                   />
                 </label>

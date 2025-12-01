@@ -158,13 +158,16 @@ const fallbackArtists =
               <Play className="w-6 h-6" fill="currentColor" />
               Comenzar a escuchar
             </button>
-            <button
-              type="button"
-              onClick={() => setAuthOpen(true)}
-              className="mt-6 inline-flex items-center justify-center w-full md:w-auto px-6 py-3 rounded-full border border-white/30 text-sm font-semibold text-white/90 hover:text-white transition-opacity"
-            >
-              Iniciar sesión
-            </button>
+
+            <div className="mt-6 flex flex-col sm:flex-row gap-3 w-full">
+              <button
+                type="button"
+                onClick={() => setAuthOpen(true)}
+                className="inline-flex items-center justify-center w-full md:w-auto px-6 py-3 rounded-full border border-white/30 text-sm font-semibold text-white/90 hover:text-white transition-opacity"
+              >
+                Iniciar sesión
+              </button>
+            </div>
             {error && <p className="text-destructive mt-3 text-sm">{error}</p>}
           </div>
         </div>

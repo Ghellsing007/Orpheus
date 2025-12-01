@@ -5,6 +5,7 @@ import type React from "react"
 import { Play, Heart } from "lucide-react"
 import Link from "next/link"
 import type { Playlist } from "@/types"
+import { cn } from "@/lib/utils"
 import { useQueue } from "@/contexts/queue-context"
 
 interface PlaylistCardProps {
@@ -14,7 +15,12 @@ interface PlaylistCardProps {
   onToggleLike?: () => void
 }
 
-export function PlaylistCard({ playlist, size = "md" }: PlaylistCardProps) {
+export function PlaylistCard({
+  playlist,
+  size = "md",
+  isLiked = false,
+  onToggleLike,
+}: PlaylistCardProps) {
   const { setQueue } = useQueue()
 
   const sizeClasses = {
@@ -62,14 +68,14 @@ export function PlaylistCard({ playlist, size = "md" }: PlaylistCardProps) {
           onClick={handlePlay}
           className="absolute bottom-2 right-2 w-12 h-12 rounded-full gradient-primary flex items-center justify-center shadow-lg opacity-100 translate-y-0 sm:opacity-0 sm:translate-y-2 sm:group-hover:opacity-100 sm:group-hover:translate-y-0 transition-all duration-300 hover:scale-110 active:scale-95"
         >
-        <Play className="w-5 h-5 text-primary-foreground ml-0.5" fill="currentColor" />
-      </button>
-    </div>
+          <Play className="w-5 h-5 text-primary-foreground ml-0.5" fill="currentColor" />
+        </button>
+      </div>
 
-    <h3 className="font-semibold text-sm truncate group-hover:text-primary transition-colors">{playlist.title}</h3>
-    <p className="text-xs text-foreground-muted truncate mt-0.5">
-      {playlist.songCount ? `${playlist.songCount} canciones` : "Playlist"}
-    </p>
-  </Link>
-)
+      <h3 className="font-semibold text-sm truncate group-hover:text-primary transition-colors">{playlist.title}</h3>
+      <p className="text-xs text-foreground-muted truncate mt-0.5">
+        {playlist.songCount ? `${playlist.songCount} canciones` : "Playlist"}
+      </p>
+    </Link>
+  )
 }
