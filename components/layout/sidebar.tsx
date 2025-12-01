@@ -3,7 +3,7 @@
 import { Home, Search, Library, Heart, Clock, Plus, LogIn, Settings } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import { useSettings } from "@/contexts/settings-context"
 import { OrpheusLogo } from "@/components/ui/orpheus-logo"
@@ -27,6 +27,7 @@ export function Sidebar() {
   const { userId, setUserId, profile, setProfile, role } = useSettings()
   const [authOpen, setAuthOpen] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
+  const [appVersion, setAppVersion] = useState<string | null>(null)
 
   const handleCreatePlaylist = async () => {
     if (!userId || role === "guest") {
@@ -42,6 +43,18 @@ export function Sidebar() {
       setAuthOpen(true)
     }
   }
+
+  useEffect(() => {
+    fetch("/version.json", { cache: "no-store" })
+      .then((res) => {
+        if (!res.ok) throw new Error("version not found")
+        return res.json()
+      })
+      .then((data) => {
+        if (data?.version) setAppVersion(data.version)
+      })
+      .catch(() => {})
+  }, [])
 
   return (
     <aside className="hidden md:flex flex-col w-64 lg:w-72 h-full bg-background-elevated border-r border-border">
@@ -174,6 +187,15 @@ export function Sidebar() {
           ¿Necesitas ayuda?
         </Link>
         <p className="pt-2 text-[11px]">&copy; 2024 Orpheus</p>
+        {appVersion && (
+          <p className="text-[11px]">Versión {appVersion}</p>
+        )}
+        <p className="text-[11px]">
+          Powered by{" "}
+          <a href="https://www.gvslabs.cloud/" target="_blank" rel="noreferrer" className="hover:text-foreground underline-offset-2 hover:underline">
+            GVSLabs
+          </a>
+        </p>
       </div>
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
       <CreatePlaylistModal open={createOpen} onClose={() => setCreateOpen(false)} userId={userId} />

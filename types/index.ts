@@ -150,6 +150,7 @@ export interface SongPreview {
   ytid: string
   title: string
   artist: string
+  channelId?: string
   thumbnail?: string
   image?: string
   lowResImage?: string
@@ -162,6 +163,7 @@ export interface HomePreview {
   ytid: string
   title: string
   type: "song" | "playlist" | "artist"
+  channelId?: string
   thumbnail?: string
   image?: string
   songCount?: number

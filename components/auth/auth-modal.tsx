@@ -46,7 +46,6 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
         const res = await api.registerUser({
           userId: newUserId,
           displayName: displayName || newUserId,
-          username: undefined,
           email: email || undefined,
           phone: phone || undefined,
           avatarUrl,
@@ -58,12 +57,11 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
         onClose()
       } else {
         const id = userIdInput.trim()
-        if (!id && !username && !email) {
-          throw new Error("Ingresa tu usuario/ID, username o email para iniciar sesión.")
+        if (!id && !email) {
+          throw new Error("Ingresa tu usuario/ID o email para iniciar sesión.")
         }
         const res = await api.loginUser({
           userId: id || undefined,
-          username: username || undefined,
           email: email || undefined,
         })
         if ((res.role ?? "guest") === "guest") {
@@ -127,7 +125,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
               <input
                 value={userIdInput}
                 onChange={(e) => setUserIdInput(e.target.value)}
-                placeholder={mode === "login" ? "user_123 o email/username" : "Define tu ID único"}
+                placeholder={mode === "login" ? "user_123 o email" : "Define tu ID único"}
                 className="mt-1 w-full h-10 rounded-lg bg-background border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
             </label>

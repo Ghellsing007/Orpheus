@@ -113,11 +113,15 @@ export function HomeScreen() {
 const fallbackArtists =
     artists.length > 0
       ? artists
-      : trending.slice(0, 10).map((song) => ({
-          id: song.channelId || song.artist,
-          name: song.artist,
-          image: song.thumbnail || "/placeholder.svg?height=200&width=200&query=artist",
-        }))
+      : trending.slice(0, 10).map((song) => {
+          const slug = song.channelId || song.artist
+          return {
+            id: slug,
+            ytid: slug,
+            name: song.artist,
+            image: song.thumbnail || "/placeholder.svg?height=200&width=200&query=artist",
+          }
+        })
 
   if (isLoading) {
     return (
@@ -367,6 +371,7 @@ function previewToSong(preview?: HomePreview | SongPreview): Song | null {
     ytid: preview.ytid,
     title: preview.title,
     artist: preview.artist || "",
+    channelId: (preview as HomePreview).channelId || (preview as any).artistId,
     duration: preview.duration ?? 0,
     thumbnail,
     thumbnailHigh: preview.image || thumbnail,

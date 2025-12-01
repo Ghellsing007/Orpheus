@@ -58,7 +58,10 @@ export function LibraryScreen() {
     [userStateQuery.data],
   )
   const likedArtistIds = useMemo(
-    () => new Set<string>(userStateQuery.data?.likedArtists?.map((artist) => artist.id) ?? []),
+    () =>
+      new Set<string>(
+        userStateQuery.data?.likedArtists?.map((artist) => artist.ytid || artist.id).filter(Boolean) as string[] ?? [],
+      ),
     [userStateQuery.data],
   )
 
@@ -90,17 +93,23 @@ export function LibraryScreen() {
 
   const artists = useMemo(() => {
     const artistMap = new Map<string, Artist>()
+    ;(userStateQuery.data?.likedArtists ?? []).forEach((artist) => {
+      const slug = artist.ytid || artist.id
+      if (!slug) return
+      artistMap.set(slug, artist)
+    })
     likedSongs.forEach((song) => {
-      if (!artistMap.has(song.artist)) {
-        artistMap.set(song.artist, {
-          id: song.artist,
-          name: song.artist,
-          image: song.thumbnail || "/placeholder.svg?height=200&width=200&query=artist",
-        })
-      }
+      const slug = song.channelId || song.artist
+      if (!slug || artistMap.has(slug)) return
+      artistMap.set(slug, {
+        id: slug,
+        ytid: slug,
+        name: song.artist,
+        image: song.thumbnail || "/placeholder.svg?height=200&width=200&query=artist",
+      })
     })
     return Array.from(artistMap.values()).slice(0, 12)
-  }, [likedSongs])
+  }, [likedSongs, userStateQuery.data?.likedArtists])
 
   const isLoading = userStateQuery.isPending && !userStateQuery.data
 

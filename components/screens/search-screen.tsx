@@ -1,7 +1,7 @@
 "use client"
 
 import { Search, X, TrendingUp } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { SongCard } from "@/components/cards/song-card"
 import { PlaylistCard } from "@/components/cards/playlist-card"
@@ -37,13 +37,14 @@ export function SearchScreen() {
   const buildArtists = (sourceSongs: Song[]): Artist[] => {
     const unique = new Map<string, Artist>()
     sourceSongs.forEach((song) => {
-      if (!unique.has(song.artist)) {
-        unique.set(song.artist, {
-          id: song.artist,
-          name: song.artist,
-          image: song.thumbnail || "/placeholder.svg?height=200&width=200&query=artist",
-        })
-      }
+      const slug = song.channelId || song.artist
+      if (!slug || unique.has(slug)) return
+      unique.set(slug, {
+        id: slug,
+        ytid: slug,
+        name: song.artist,
+        image: song.thumbnail || "/placeholder.svg?height=200&width=200&query=artist",
+      })
     })
     return Array.from(unique.values()).slice(0, 12)
   }
@@ -92,11 +93,22 @@ export function SearchScreen() {
     refetchOnWindowFocus: false,
   })
 
+  const searchChannelsQuery = useQuery({
+    queryKey: ["search-channels", debouncedQuery],
+    queryFn: () => api.searchChannels(debouncedQuery),
+    enabled: Boolean(debouncedQuery),
+    staleTime: 1000 * 60 * 2,
+    refetchOnWindowFocus: false,
+  })
+
   const suggestions = suggestionsQuery.data ?? []
   const songs = query ? searchQuery.data?.songs ?? [] : initialQuery.data?.songs ?? []
   const playlists = query ? searchQuery.data?.playlists ?? [] : initialQuery.data?.playlists ?? []
   const initialSongs = initialQuery.data?.songs ?? []
-  const artists = buildArtists(songs.length > 0 ? songs : initialQuery.data?.songs ?? [])
+  const artists = useMemo(() => {
+    if (debouncedQuery && searchChannelsQuery.data?.length) return searchChannelsQuery.data
+    return buildArtists(songs.length > 0 ? songs : initialSongs)
+  }, [debouncedQuery, searchChannelsQuery.data, songs, initialSongs])
   const isLoading = query ? searchQuery.isPending : initialQuery.isPending
   const error = query && searchQuery.isError ? "No pudimos completar la busqueda" : null
 

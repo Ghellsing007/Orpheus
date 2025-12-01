@@ -12,8 +12,9 @@ interface ArtistCardProps {
 }
 
 export function ArtistCard({ artist, isLiked = false, onToggleLike }: ArtistCardProps) {
-  return (
-    <Link href={`/artist/${artist.id}`} className="group text-center flex-shrink-0 w-32 relative">
+  const artistSlug = artist.ytid || artist.id
+  const content = (
+    <>
       <div className="relative aspect-square rounded-full overflow-hidden mb-3 shadow-lg shadow-black/20 mx-auto">
         <img
           src={artist.image || "/placeholder.svg?height=200&width=200&query=artist portrait"}
@@ -39,6 +40,20 @@ export function ArtistCard({ artist, isLiked = false, onToggleLike }: ArtistCard
       <p className="text-xs text-foreground-muted">
         {artist.monthlyListeners ? `${formatNumber(artist.monthlyListeners)} oyentes` : "Artista"}
       </p>
-    </Link>
+    </>
+  )
+
+  if (artistSlug) {
+    return (
+      <Link href={`/artist/${encodeURIComponent(artistSlug)}`} className="group text-center flex-shrink-0 w-32 relative">
+        {content}
+      </Link>
+    )
+  }
+
+  return (
+    <div className="group text-center flex-shrink-0 w-32 relative" role="presentation">
+      {content}
+    </div>
   )
 }

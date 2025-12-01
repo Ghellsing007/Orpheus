@@ -85,7 +85,7 @@ class ApiService {
       lowResImage: input.lowResImage,
       highResImage: input.highResImage,
       isLive: input.isLive,
-      channelId: (input as any).channelId,
+      channelId: (input as any).channelId || (input as any).artistId,
       source: "youtube",
     }
   }
@@ -121,7 +121,7 @@ class ApiService {
     )
 
     return {
-      id: input.id || input.ytid || "",
+      id: input.ytid || input.id || "",
       ytid: input.ytid || input.id,
       name: input.title || input.name || "",
       image: input.image || "",
