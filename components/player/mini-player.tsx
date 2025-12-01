@@ -74,7 +74,16 @@ export function MiniPlayer() {
 
       const res = await fetch(target)
       if (!res.ok) {
-        throw new Error(`Download failed: ${res.status}`)
+        let backendError = ""
+        try {
+          const data = await res.json()
+          backendError = data?.error || ""
+        } catch (_) {}
+        const friendly =
+          backendError && res.status === 404
+            ? "Este video no está disponible para descargar (restricciones de YouTube)."
+            : "No se pudo descargar esta pista."
+        throw new Error(friendly)
       }
       const blob = await res.blob()
       const disposition = res.headers.get("content-disposition") || ""
@@ -91,7 +100,7 @@ export function MiniPlayer() {
       setShowDownloadModal(false)
     } catch (err) {
       console.error(err)
-      setDownloadError("No se pudo generar la descarga")
+      setDownloadError(err instanceof Error ? err.message : "No se pudo generar la descarga")
     } finally {
       setDownloading(false)
     }
