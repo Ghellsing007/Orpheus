@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { X, Sparkles } from "lucide-react"
+import { X, Sparkles, Download, ShieldCheck } from "lucide-react"
 
 export function UpdateModal() {
   const [version, setVersion] = useState<string | null>(null)
@@ -53,17 +53,23 @@ export function UpdateModal() {
 
         <h2 className="text-2xl font-bold mb-2">Orpheus v{version}</h2>
         <p className="text-sm text-foreground-muted mb-4">
-          Nuevas mejoras de reproducción, controles y rendimiento. Gracias por preferirnos
+          Descargas más claras y mensajes de error cuando un video tiene restricciones. Gracias por preferirnos.
         </p>
 
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span>Controles de progreso y volumen mejorados</span>
+            <span className="flex items-center gap-2">
+              <Download className="w-4 h-4" />
+              Descargas con avisos si el video no está disponible
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span>Interfaces más limpias con textos truncados</span>
+            <span className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4" />
+              Manejo mejorado de errores en descargas
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
