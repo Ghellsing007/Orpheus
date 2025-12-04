@@ -34,6 +34,7 @@ export function SearchScreen() {
   const [debouncedQuery, setDebouncedQuery] = useState("")
   const [recentSearches, setRecentSearches] = useState<string[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
+  const hydratedLast = useRef(false)
   const { setQueue } = useQueue()
 
   const buildArtists = (sourceSongs: Song[]): Artist[] => {
@@ -56,15 +57,16 @@ export function SearchScreen() {
     return () => clearTimeout(handler)
   }, [query])
 
-  // Hydrate with the last search performed (if any)
+  // Hydrate with the last search performed (once on mount)
   useEffect(() => {
-    if (typeof window === "undefined") return
+    if (typeof window === "undefined" || hydratedLast.current) return
     const last = localStorage.getItem(LAST_SEARCH_KEY)
-    if (last && !query) {
+    if (last) {
       setQuery(last)
       setDebouncedQuery(last)
     }
-  }, [query])
+    hydratedLast.current = true
+  }, [])
 
   useEffect(() => {
     setRecentSearches(getRecentSearches())
@@ -134,6 +136,15 @@ export function SearchScreen() {
     }
   }, [debouncedQuery, searchQuery.isSuccess])
 
+  const clearQuery = () => {
+    setQuery("")
+    setDebouncedQuery("")
+    setShowSuggestions(false)
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(LAST_SEARCH_KEY)
+    }
+  }
+
   const handleRemoveRecent = (term: string) => {
     const updated = removeRecentSearch(term)
     setRecentSearches(updated)
@@ -162,7 +173,7 @@ export function SearchScreen() {
           />
           {query && (
             <button
-              onClick={() => setQuery("")}
+              onClick={clearQuery}
               className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-foreground-muted hover:text-foreground rounded-full hover:bg-card-hover transition-colors"
             >
               <X className="w-5 h-5" />

@@ -53,7 +53,7 @@ export function UpdateModal() {
 
         <h2 className="text-2xl font-bold mb-2">Orpheus v{version}</h2>
         <p className="text-sm text-foreground-muted mb-4">
-          Nueva version PWA: actualizamos manifest y build instalada para que obtengas los ultimos cambios.
+          v{version} lista: manifest y build PWA actualizados, y la busqueda ahora se limpia correctamente.
         </p>
 
         <div className="space-y-2 text-sm">
@@ -71,6 +71,10 @@ export function UpdateModal() {
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
             <span>Optimizaciones de arranque y carga offline</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-2 h-2 rounded-full bg-primary" />
+            <span>Fix: limpiar busquedas ya no se reautocompleta</span>
           </div>
         </div>
 
