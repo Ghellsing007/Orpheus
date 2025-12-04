@@ -1,12 +1,14 @@
 "use client"
 
 import type React from "react"
+import { useRef, useState } from "react"
 
 import { Play, Heart } from "lucide-react"
 import Link from "next/link"
-import type { Playlist } from "@/types"
+import type { Playlist, Song } from "@/types"
 import { cn } from "@/lib/utils"
 import { useQueue } from "@/contexts/queue-context"
+import { api } from "@/services/api"
 
 interface PlaylistCardProps {
   playlist: Playlist
@@ -22,6 +24,8 @@ export function PlaylistCard({
   onToggleLike,
 }: PlaylistCardProps) {
   const { setQueue } = useQueue()
+  const cachedSongs = useRef<Song[] | null>(null)
+  const [loading, setLoading] = useState(false)
 
   const sizeClasses = {
     sm: "w-32",
@@ -29,11 +33,31 @@ export function PlaylistCard({
     lg: "w-48",
   }
 
-  const handlePlay = (e: React.MouseEvent) => {
+  const handlePlay = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (playlist.songs && playlist.songs.length > 0) {
-      setQueue(playlist.songs, 0)
+
+    const localSongs = playlist.songs?.length ? playlist.songs : playlist.list
+    if (localSongs && localSongs.length > 0) {
+      setQueue(localSongs, 0)
+      return
+    }
+
+    if (cachedSongs.current?.length) {
+      setQueue(cachedSongs.current, 0)
+      return
+    }
+
+    try {
+      setLoading(true)
+      const full = await api.getPlaylist(playlist.id)
+      const songs = full.songs?.length ? full.songs : full.list || []
+      cachedSongs.current = songs
+      if (songs.length > 0) {
+        setQueue(songs, 0)
+      }
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -66,7 +90,8 @@ export function PlaylistCard({
         {/* Play button */}
         <button
           onClick={handlePlay}
-          className="absolute bottom-2 right-2 w-12 h-12 rounded-full gradient-primary flex items-center justify-center shadow-lg opacity-100 translate-y-0 sm:opacity-0 sm:translate-y-2 sm:group-hover:opacity-100 sm:group-hover:translate-y-0 transition-all duration-300 hover:scale-110 active:scale-95"
+          disabled={loading}
+          className="absolute bottom-2 right-2 w-12 h-12 rounded-full gradient-primary flex items-center justify-center shadow-lg opacity-100 translate-y-0 sm:opacity-0 sm:translate-y-2 sm:group-hover:opacity-100 sm:group-hover:translate-y-0 transition-all duration-300 hover:scale-110 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
         >
           <Play className="w-5 h-5 text-primary-foreground ml-0.5" fill="currentColor" />
         </button>

@@ -1,8 +1,7 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { X, Smartphone, Info } from "lucide-react"
-import { cn } from "@/lib/utils"
 
 type BeforeInstallEvent = Event & {
   prompt: () => Promise<void>
@@ -27,15 +26,14 @@ export function InstallPrompt() {
   const [deferred, setDeferred] = useState<BeforeInstallEvent | null>(null)
   const [showIosModal, setShowIosModal] = useState(false)
   const [isInstalled, setIsInstalled] = useState(isStandalone())
-
-  const dismissedUntil = useMemo(() => {
-    if (typeof localStorage === "undefined") return 0
-    const raw = localStorage.getItem(DISMISS_KEY)
-    return raw ? Number(raw) : 0
-  }, [])
+  const [dismissedUntil, setDismissedUntil] = useState(0)
 
   useEffect(() => {
     setReady(true)
+    if (typeof localStorage !== "undefined") {
+      const raw = localStorage.getItem(DISMISS_KEY)
+      setDismissedUntil(raw ? Number(raw) : 0)
+    }
   }, [])
 
   useEffect(() => {
@@ -61,6 +59,7 @@ export function InstallPrompt() {
   const handleDismiss = () => {
     const until = Date.now() + DISMISS_DAYS * 24 * 60 * 60 * 1000
     localStorage.setItem(DISMISS_KEY, String(until))
+    setDismissedUntil(until)
     setDeferred(null)
     setShowIosModal(false)
   }
@@ -79,11 +78,9 @@ export function InstallPrompt() {
   }
 
   if (isInstalled) return null
-
-  // Evita desajustes de hidrataciÃ³n: no renderizar hasta que el cliente estÃ© listo
   if (!ready) return null
 
-  const shouldShowBanner = deferred != null && !isIos()
+  const shouldShowBanner = deferred != null && !isIos() && Date.now() >= dismissedUntil
   const shouldShowIosHint = !deferred && isIos() && Date.now() >= dismissedUntil
 
   if (!shouldShowBanner && !shouldShowIosHint && !showIosModal) return null
@@ -98,9 +95,7 @@ export function InstallPrompt() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold">Instala Orpheus</p>
-              <p className="text-xs text-foreground-muted truncate">
-                Acceso rápido desde tu pantalla de inicio
-              </p>
+              <p className="text-xs text-foreground-muted truncate">Acceso rapido desde tu pantalla de inicio</p>
             </div>
             <div className="flex items-center gap-2">
               {shouldShowBanner ? (
@@ -115,7 +110,7 @@ export function InstallPrompt() {
                   onClick={() => setShowIosModal(true)}
                   className="px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition flex items-center gap-1"
                 >
-                  <Info className="w-4 h-4" /> Cómo instalar
+                  <Info className="w-4 h-4" /> Como instalar
                 </button>
               )}
               <button
@@ -135,7 +130,7 @@ export function InstallPrompt() {
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <div>
                 <p className="text-sm font-semibold">Instalar en iPhone</p>
-                <p className="text-xs text-foreground-muted">Añade Orpheus a tu pantalla de inicio</p>
+                <p className="text-xs text-foreground-muted">Anade Orpheus a tu pantalla de inicio</p>
               </div>
               <button
                 onClick={handleDismiss}
@@ -145,9 +140,9 @@ export function InstallPrompt() {
               </button>
             </div>
             <div className="p-5 space-y-3 text-sm">
-              <p>1. Toca el botón “Compartir” en Safari.</p>
-              <p>2. Selecciona “Añadir a pantalla de inicio”.</p>
-              <p>3. Confirma y listo: Orpheus se abrirá como app.</p>
+              <p>1. Toca el boton Compartir en Safari.</p>
+              <p>2. Selecciona Anadir a pantalla de inicio.</p>
+              <p>3. Confirma y listo: Orpheus se abrira como app.</p>
             </div>
             <div className="px-5 pb-4">
               <button
