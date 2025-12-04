@@ -81,7 +81,7 @@ export function MiniPlayer() {
         } catch (_) {}
         const friendly =
           backendError && res.status === 404
-            ? "Este video no está disponible para descargar (restricciones de YouTube)."
+            ? "Este video no está disponible para descargar."
             : "No se pudo descargar esta pista."
         throw new Error(friendly)
       }
@@ -235,193 +235,195 @@ export function MiniPlayer() {
   return (
     <>
       <div className="fixed bottom-16 md:bottom-0 left-0 right-0 z-30 glass border-t border-border">
-        {/* Progress bar */}
-        <div className="h-2 px-3 md:px-6 pt-2 pb-3">
-          <input
-            type="range"
-            min={0}
-            max={duration || 0}
-            step="0.1"
-            value={currentTime}
-            onChange={(e) => seek(Number.parseFloat(e.target.value))}
-            className="w-full h-1 bg-card rounded-full appearance-none cursor-pointer accent-primary [&::-webkit-slider-runnable-track]:bg-card [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-track]:bg-card [&::-moz-range-track]:rounded-full [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full"
-            style={{
-              accentColor: "var(--primary)",
-              background: `linear-gradient(to right, var(--primary) ${progress}%, var(--card) ${progress}%)`,
-            }}
-          />
-        </div>
-
-        <div className="flex items-center gap-3 px-3 py-2 md:px-6 md:py-3">
-          {/* Song Info */}
-          <button
-            onClick={() => setShowNowPlaying(true)}
-            className="flex items-center gap-3 flex-1 min-w-0 text-left group"
-          >
-            <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-lg overflow-hidden flex-shrink-0">
-              <img
-                src={currentSong.thumbnail || "/placeholder.svg"}
-                alt={currentSong.title}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <ChevronUp className="w-6 h-6 text-white" />
-              </div>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm md:text-base truncate">{currentSong.title}</p>
-              {artistHref ? (
-                <Link
-                  href={artistHref}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                  }}
-                  className="text-foreground-muted text-xs md:text-sm truncate hover:text-primary transition-colors"
-                >
-                  {currentSong.artist}
-                </Link>
-              ) : (
-                <p className="text-foreground-muted text-xs md:text-sm truncate">{currentSong.artist}</p>
-              )}
-            </div>
-          </button>
-
-          {/* Controls */}
-          <div className="flex items-center gap-2 md:gap-4">
-            <button
-            onClick={() => {
-              vibrateLight()
-              playPrevious()
-            }}
-            className="w-10 h-10 items-center justify-center text-foreground-muted hover:text-foreground transition-colors flex"
-            onMouseDown={() => navigator.vibrate?.(10)}
-          >
-            <SkipBack className="w-5 h-5" />
-          </button>
-
-            <button
-            onClick={() => {
-              vibrateLight()
-              togglePlay()
-            }}
-            className="w-12 h-12 md:w-14 md:h-14 rounded-full gradient-primary flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shadow-lg shadow-primary/25"
-            onMouseDown={() => navigator.vibrate?.(10)}
-          >
-            {isPlaying ? (
-              <Pause className="w-6 h-6 text-primary-foreground" fill="currentColor" />
-              ) : (
-                <Play className="w-6 h-6 text-primary-foreground ml-1" fill="currentColor" />
-              )}
-            </button>
-
-            <button
-            onClick={() => {
-              vibrateLight()
-              playNext()
-            }}
-            className="w-10 h-10 items-center justify-center text-foreground-muted hover:text-foreground transition-colors flex"
-            onMouseDown={() => navigator.vibrate?.(10)}
-          >
-            <SkipForward className="w-5 h-5" />
-          </button>
-          </div>
-
-          {/* Menu */}
-          <div className="relative">
-            <button
-              ref={menuButtonRef}
-              onClick={(e) => {
-                e.stopPropagation()
-                setMenuOpen((v) => !v)
+        <div className="flex flex-col gap-3">
+          {/* Progress bar */}
+          <div className="px-3 md:px-6 pt-3 pb-5">
+            <input
+              type="range"
+              min={0}
+              max={duration || 0}
+              step="0.1"
+              value={currentTime}
+              onChange={(e) => seek(Number.parseFloat(e.target.value))}
+              className="w-full h-1 bg-card rounded-full appearance-none cursor-pointer accent-primary [&::-webkit-slider-runnable-track]:bg-card [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-track]:bg-card [&::-moz-range-track]:rounded-full [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full"
+              style={{
+                accentColor: "var(--primary)",
+                background: `linear-gradient(to right, var(--primary) ${progress}%, var(--card) ${progress}%)`,
               }}
-              className="w-10 h-10 flex items-center justify-center text-foreground-muted hover:text-foreground transition-colors"
-            >
-              <MoreVertical className="w-5 h-5" />
-            </button>
-            {menuOpen &&
-              createPortal(
-                <>
-                  <div
-                    className="fixed inset-0 z-[1400]"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setMenuOpen(false)
-                    }}
-                  />
-                  {menuPos && (
-                    <div
-                      className={cn(
-                        "fixed z-[1500] w-56 bg-card border border-border rounded-xl shadow-xl py-2",
-                        menuPos.origin === "bottom" ? "origin-bottom" : "origin-top",
-                      )}
-                      style={{ top: menuPos.top, left: menuPos.left }}
-                    >
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleLike()
-                        }}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
-                      >
-                        <Heart className={cn("w-4 h-4", isLiked && "fill-current text-primary")} />
-                        {isLiked ? "Quitar de favoritos" : "Agregar a favoritos"}
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          toggleShuffle()
-                        }}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
-                      >
-                        <Shuffle className={cn("w-4 h-4", shuffle && "text-primary")} />
-                        {shuffle ? "Quitar aleatorio" : "Aleatorio"}
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          cycleRepeat()
-                        }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
-                  >
-                    <Repeat className={cn("w-4 h-4", repeat !== "off" && "text-primary")} />
-                    {repeat === "one" ? "Repetir pista" : repeat === "all" ? "Repetir todo" : "Repetir"}
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setShowNowPlaying(true)
-                      setActiveTab("queue")
-                      setMenuOpen(false)
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
-                  >
-                    <ListMusic className="w-4 h-4" />
-                    Ver cola
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setShowDownloadModal(true)
-                          setMenuOpen(false)
-                        }}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
-                        disabled={downloading}
-                      >
-                        <Download className="w-4 h-4" />
-                        {downloading ? "Preparando..." : "Descargar"}
-                      </button>
-                    </div>
-                  )}
-                </>,
-                document.body,
-              )}
+            />
           </div>
 
-          {/* Duration - Desktop only */}
-          <div className="hidden md:flex items-center gap-2 text-sm text-foreground-muted min-w-[100px] justify-end">
-            <span>{formatDuration(currentTime)}</span>
-            <span>/</span>
-            <span>{formatDuration(duration)}</span>
+          <div className="flex items-center gap-3 px-3 pb-2 md:px-6 md:pb-4">
+            {/* Song Info */}
+            <button
+              onClick={() => setShowNowPlaying(true)}
+              className="flex items-center gap-3 flex-1 min-w-0 text-left group"
+            >
+              <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-lg overflow-hidden flex-shrink-0">
+                <img
+                  src={currentSong.thumbnail || "/placeholder.svg"}
+                  alt={currentSong.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <ChevronUp className="w-6 h-6 text-white" />
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm md:text-base truncate">{currentSong.title}</p>
+                {artistHref ? (
+                  <Link
+                    href={artistHref}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                    }}
+                    className="text-foreground-muted text-xs md:text-sm truncate hover:text-primary transition-colors"
+                  >
+                    {currentSong.artist}
+                  </Link>
+                ) : (
+                  <p className="text-foreground-muted text-xs md:text-sm truncate">{currentSong.artist}</p>
+                )}
+              </div>
+            </button>
+
+            {/* Controls */}
+            <div className="flex items-center gap-2 md:gap-4">
+              <button
+                onClick={() => {
+                  vibrateLight()
+                  playPrevious()
+                }}
+                className="w-10 h-10 items-center justify-center text-foreground-muted hover:text-foreground transition-colors flex"
+                onMouseDown={() => navigator.vibrate?.(10)}
+              >
+                <SkipBack className="w-5 h-5" />
+              </button>
+
+              <button
+                onClick={() => {
+                  vibrateLight()
+                  togglePlay()
+                }}
+                className="w-12 h-12 md:w-14 md:h-14 rounded-full gradient-primary flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shadow-lg shadow-primary/25"
+                onMouseDown={() => navigator.vibrate?.(10)}
+              >
+                {isPlaying ? (
+                  <Pause className="w-6 h-6 text-primary-foreground" fill="currentColor" />
+                ) : (
+                  <Play className="w-6 h-6 text-primary-foreground ml-1" fill="currentColor" />
+                )}
+              </button>
+
+              <button
+                onClick={() => {
+                  vibrateLight()
+                  playNext()
+                }}
+                className="w-10 h-10 items-center justify-center text-foreground-muted hover:text-foreground transition-colors flex"
+                onMouseDown={() => navigator.vibrate?.(10)}
+              >
+                <SkipForward className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Menu */}
+            <div className="relative">
+              <button
+                ref={menuButtonRef}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setMenuOpen((v) => !v)
+                }}
+                className="w-10 h-10 flex items-center justify-center text-foreground-muted hover:text-foreground transition-colors"
+              >
+                <MoreVertical className="w-5 h-5" />
+              </button>
+              {menuOpen &&
+                createPortal(
+                  <>
+                    <div
+                      className="fixed inset-0 z-[1400]"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setMenuOpen(false)
+                      }}
+                    />
+                    {menuPos && (
+                      <div
+                        className={cn(
+                          "fixed z-[1500] w-56 bg-card border border-border rounded-xl shadow-xl py-2",
+                          menuPos.origin === "bottom" ? "origin-bottom" : "origin-top",
+                        )}
+                        style={{ top: menuPos.top, left: menuPos.left }}
+                      >
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleLike()
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
+                        >
+                          <Heart className={cn("w-4 h-4", isLiked && "fill-current text-primary")} />
+                          {isLiked ? "Quitar de favoritos" : "Agregar a favoritos"}
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            toggleShuffle()
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
+                        >
+                          <Shuffle className={cn("w-4 h-4", shuffle && "text-primary")} />
+                          {shuffle ? "Quitar aleatorio" : "Aleatorio"}
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            cycleRepeat()
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
+                        >
+                          <Repeat className={cn("w-4 h-4", repeat !== "off" && "text-primary")} />
+                          {repeat === "one" ? "Repetir pista" : repeat === "all" ? "Repetir todo" : "Repetir"}
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setShowNowPlaying(true)
+                            setActiveTab("queue")
+                            setMenuOpen(false)
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
+                        >
+                          <ListMusic className="w-4 h-4" />
+                          Ver cola
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setShowDownloadModal(true)
+                            setMenuOpen(false)
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
+                          disabled={downloading}
+                        >
+                          <Download className="w-4 h-4" />
+                          {downloading ? "Preparando..." : "Descargar"}
+                        </button>
+                      </div>
+                    )}
+                  </>,
+                  document.body,
+                )}
+            </div>
+
+            {/* Duration - Desktop only */}
+            <div className="hidden md:flex items-center gap-2 text-sm text-foreground-muted min-w-[100px] justify-end">
+              <span>{formatDuration(currentTime)}</span>
+              <span>/</span>
+              <span>{formatDuration(duration)}</span>
+            </div>
           </div>
         </div>
       </div>

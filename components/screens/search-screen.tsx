@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, X, TrendingUp } from "lucide-react"
+import { Search, X, TrendingUp, Trash2 } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { SongCard } from "@/components/cards/song-card"
@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils"
 import { useQueue } from "@/contexts/queue-context"
 import { api } from "@/services/api"
 import type { Artist, Playlist, Song } from "@/types"
-import { addRecentSearch, getRecentSearches } from "@/lib/storage"
+import { addRecentSearch, clearRecentSearches, getRecentSearches, removeRecentSearch } from "@/lib/storage"
 
 type Tab = "all" | "songs" | "playlists" | "artists"
 
@@ -133,6 +133,16 @@ export function SearchScreen() {
       }
     }
   }, [debouncedQuery, searchQuery.isSuccess])
+
+  const handleRemoveRecent = (term: string) => {
+    const updated = removeRecentSearch(term)
+    setRecentSearches(updated)
+  }
+
+  const handleClearRecent = () => {
+    clearRecentSearches()
+    setRecentSearches([])
+  }
 
   return (
     <div className="px-4 md:px-8 py-6 space-y-6">
@@ -275,23 +285,45 @@ export function SearchScreen() {
           </section>
 
           {/* Recent Searches */}
-          <section>
-            <div className="flex items-center gap-2 mb-4">
-              <TrendingUp className="w-5 h-5 text-foreground-muted" />
-              <h2 className="text-xl font-bold">Busquedas recientes</h2>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {recentSearches.map((term) => (
+          {recentSearches.length > 0 && (
+            <section>
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-foreground-muted" />
+                  <h2 className="text-xl font-bold">Busquedas recientes</h2>
+                </div>
                 <button
-                  key={term}
-                  onClick={() => setQuery(term)}
-                  className="px-4 py-2 bg-card rounded-full text-sm hover:bg-card-hover transition-colors"
+                  onClick={handleClearRecent}
+                  className="flex items-center gap-2 text-sm text-foreground-muted hover:text-foreground transition-colors"
                 >
-                  {term}
+                  <Trash2 className="w-4 h-4" />
+                  Limpiar todo
                 </button>
-              ))}
-            </div>
-          </section>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {recentSearches.map((term) => (
+                  <button
+                    key={term}
+                    onClick={() => setQuery(term)}
+                    className="px-4 py-2 bg-card rounded-full text-sm hover:bg-card-hover transition-colors flex items-center gap-2"
+                  >
+                    <span>{term}</span>
+                    <span
+                      role="button"
+                      aria-label={`Eliminar ${term}`}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleRemoveRecent(term)
+                      }}
+                      className="hover:text-destructive transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Browse All */}
           <section>

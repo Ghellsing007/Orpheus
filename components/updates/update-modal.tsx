@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { X, Sparkles, Download, ShieldCheck } from "lucide-react"
+import { X, Sparkles, ShieldCheck } from "lucide-react"
 
 export function UpdateModal() {
   const [version, setVersion] = useState<string | null>(null)
@@ -41,7 +41,7 @@ export function UpdateModal() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2 text-primary">
             <Sparkles className="w-5 h-5" />
-            <span className="text-sm font-semibold">Actualización disponible</span>
+            <span className="text-sm font-semibold">Actualizacion disponible</span>
           </div>
           <button
             onClick={closeModal}
@@ -53,27 +53,24 @@ export function UpdateModal() {
 
         <h2 className="text-2xl font-bold mb-2">Orpheus v{version}</h2>
         <p className="text-sm text-foreground-muted mb-4">
-          Descargas más claras y mensajes de error cuando un video tiene restricciones. Gracias por preferirnos.
+          Nueva version PWA: actualizamos manifest y build instalada para que obtengas los ultimos cambios.
         </p>
 
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span className="flex items-center gap-2">
-              <Download className="w-4 h-4" />
-              Descargas con avisos si el video no está disponible
-            </span>
+            <span>Manifest y version.json actualizados para refrescar la instalacion</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
             <span className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4" />
-              Manejo mejorado de errores en descargas
+              Mejor manejo de cache para la PWA instalada
             </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span>Optimizaciones para PWA</span>
+            <span>Optimizaciones de arranque y carga offline</span>
           </div>
         </div>
 

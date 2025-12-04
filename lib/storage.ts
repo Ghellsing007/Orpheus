@@ -132,6 +132,19 @@ export function addRecentSearch(term: string): string[] {
   return updated
 }
 
+export function removeRecentSearch(term: string): string[] {
+  if (typeof window === "undefined") return []
+  const normalized = term.trim()
+  const recent = getRecentSearches().filter((t) => t.toLowerCase() !== normalized.toLowerCase())
+  localStorage.setItem(STORAGE_KEYS.RECENT_SEARCHES, JSON.stringify(recent))
+  return recent
+}
+
+export function clearRecentSearches(): void {
+  if (typeof window === "undefined") return
+  localStorage.removeItem(STORAGE_KEYS.RECENT_SEARCHES)
+}
+
 // Export/Import State
 export function exportState(): string {
   if (typeof window === "undefined") return "{}"
