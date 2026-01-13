@@ -135,6 +135,10 @@ export function updateStoredCache(videoId: string, available: boolean) {
  * Uses a hidden iframe player to verify.
  */
 export async function checkVideoAvailability(videoId: string, priority = false): Promise<boolean> {
+  // Bypass if environment variable is false
+  const shouldCheck = process.env.NEXT_PUBLIC_CHECK_PLAYABILITY !== "false"
+  if (!shouldCheck) return true
+
   const cache = getStoredCache()
   const cached = cache[videoId]
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
@@ -159,7 +163,7 @@ export async function checkVideoAvailability(videoId: string, priority = false):
         if (!resolved) {
           cleanup(false)
         }
-      }, 2500) // Reducido de 5s a 2.5s para mayor rapidez
+      }, 5000) // 5s para mayor margen en móviles
 
       const cleanup = (result: boolean) => {
         if (resolved) return
@@ -197,7 +201,7 @@ export async function checkVideoAvailability(videoId: string, priority = false):
                   cleanup(false)
                 }
               }
-            }, 800) // Reducido de 1500ms a 800ms
+            }, 2000) // 2s para mayor margen en móviles
           },
           onStateChange: (event) => {
             // Si llega a PLAYING (1) o BUFFERING (3), el video es reproducible
@@ -206,7 +210,7 @@ export async function checkVideoAvailability(videoId: string, priority = false):
               cleanup(true)
             }
           },
-          onError: (event) => {
+          onError: () => {
             // Captura errores de restricción de inserción (101, 150)
             cleanup(false)
           },

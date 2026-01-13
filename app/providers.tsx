@@ -8,7 +8,6 @@ import { QueueProvider } from "@/contexts/queue-context"
 import { SettingsProvider } from "@/contexts/settings-context"
 import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register"
 
-
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
     () =>

@@ -30,6 +30,7 @@ export async function shareContent(params: {
   onError?: (err: any) => void
 }) {
   const { title, text, url, onSuccess, onError } = params
+  if (!url) return
   const fullUrl = url.startsWith("http") ? url : `${window.location.origin}${url}`
 
   if (typeof navigator !== "undefined" && navigator.share) {

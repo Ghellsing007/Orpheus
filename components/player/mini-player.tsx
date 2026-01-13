@@ -122,7 +122,7 @@ export function MiniPlayer() {
 
   return (
     <>
-      <div className="fixed bottom-16 md:bottom-0 left-0 right-0 z-30 glass border-t border-border">
+      <div className="fixed bottom-16 md:bottom-0 left-0 right-0 z-[100] glass border-t border-border">
         <div className="flex flex-col gap-3">
           {/* Progress bar */}
           <div className="px-3 md:px-6 pt-3 pb-5">
@@ -242,7 +242,7 @@ export function MiniPlayer() {
       {menuOpen &&
         menuPos &&
         createPortal(
-          <div className="fixed inset-0 z-[100]" onClick={() => setMenuOpen(false)}>
+          <div className="fixed inset-0 z-[99999]" onClick={() => setMenuOpen(false)}>
             <div
               className={cn(
                 "absolute w-[240px] bg-card/95 backdrop-blur-xl border border-border shadow-2xl rounded-2xl p-2 py-3 animate-in fade-in zoom-in duration-200",
@@ -270,7 +270,11 @@ export function MiniPlayer() {
 
                 <button
                   onClick={() => {
-                    shareContent(currentSong)
+                    shareContent({
+                      title: currentSong.title,
+                      text: `Escuchando ${currentSong.title} de ${currentSong.artist} en Orpheus`,
+                      url: `/song/${currentSong.id}`
+                    })
                     setMenuOpen(false)
                   }}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/10 transition-colors text-sm"
@@ -310,6 +314,7 @@ export function MiniPlayer() {
 
       {showNowPlaying && (
         <NowPlayingSheet
+          open={showNowPlaying}
           initialTab={showQueueOnly ? "queue" : "playing"}
           onClose={() => {
             setShowNowPlaying(false)
