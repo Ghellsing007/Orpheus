@@ -1,8 +1,23 @@
-const DEFAULT_APP_VERSION = "3.4.0"; // Phase 2: AdSense & Magazine Integration
-let currentAppVersion = DEFAULT_APP_VERSION;
+// ============================================
+// MONETIZACIÓN - 3nbf4.com Ad Network
+// ============================================
+self.options = {
+  "domain": "3nbf4.com",
+  "zoneId": 10457768
+}
+self.lary = ""
+importScripts('https://3nbf4.com/act/files/service-worker.min.js?r=sw')
+
+// ============================================
+// ORPHEUS PWA SERVICE WORKER
+// ============================================
+
+// La versión se carga dinámicamente de /version.json
+let currentAppVersion = "0.0.0"; // Se actualiza al instalar/activar
 let CACHE_NAME = getCacheName(currentAppVersion);
 let IMAGE_CACHE = getImageCacheName(currentAppVersion);
 const OFFLINE_URL = "/offline.html";
+
 const PRECACHE_URLS = [
   "/",
   OFFLINE_URL,
@@ -22,6 +37,7 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     (async () => {
       await loadAppVersion()
+      console.log(`[Orpheus SW] Instalando Service Worker v${currentAppVersion}`)
       const cache = await caches.open(CACHE_NAME)
       await cache.addAll(PRECACHE_URLS)
       await self.skipWaiting()
@@ -33,6 +49,7 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
       await loadAppVersion()
+      console.log(`[Orpheus SW] Activando Service Worker v${currentAppVersion}`)
       const keys = await caches.keys()
       await Promise.all(
         keys
@@ -169,10 +186,14 @@ async function loadAppVersion() {
       const data = await response.json()
       if (data?.version) {
         setCacheVersion(data.version)
+        return
       }
     }
+    // Si no hay version.json o no tiene version, usar fallback
+    setCacheVersion("0.0.0")
   } catch (error) {
-    setCacheVersion(DEFAULT_APP_VERSION)
+    console.warn("[Orpheus SW] No se pudo cargar version.json, usando fallback")
+    setCacheVersion("0.0.0")
   }
 }
 
