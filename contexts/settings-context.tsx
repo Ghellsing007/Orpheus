@@ -32,6 +32,7 @@ interface SettingsContextType extends Settings {
   setUserId: (id: string) => void
   setProfile: (profile: UserProfile | null) => void
   setBlockAds: (block: boolean) => void
+  isHydrated: boolean
 }
 
 const SettingsContext = createContext<SettingsContextType | null>(null)
@@ -42,20 +43,56 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [deviceId, setDeviceId] = useState<string>("")
   const [profile, setProfile] = useState<UserProfile | null>(null)
 
+  const [isHydrated, setIsHydrated] = useState(false)
+
   useEffect(() => {
     setSettings(getSettings())
     // deviceId always present for local-only needs
     setDeviceId(getUserId())
     // userId only if we have a stored session (profile not persisted yet)
     setUserId("")
+    setIsHydrated(true)
   }, [])
 
-  // Apply accent color to CSS variables
+  // Apply theme and accent color to CSS variables
   useEffect(() => {
-    const colors = ACCENT_COLORS[settings.accentColor]
-    document.documentElement.style.setProperty("--primary", colors.primary)
-    document.documentElement.style.setProperty("--accent", colors.accent)
-  }, [settings.accentColor])
+    const root = document.documentElement
+    // Initial theme apply
+    root.classList.toggle("dark", settings.theme === "dark")
+    root.classList.toggle("light", settings.theme === "light")
+
+    const colors = ACCENT_COLORS[settings.accentColor as keyof typeof ACCENT_COLORS]
+    if (colors) {
+      root.style.setProperty("--primary", colors.primary)
+      root.style.setProperty("--accent", colors.accent)
+    }
+  }, [settings.accentColor, settings.theme])
+
+  // Nuclear Ad Blocking class toggle
+  useEffect(() => {
+    document.body.classList.toggle("ads-blocked", settings.blockAds)
+    
+    if (settings.blockAds) {
+      // Intentar limpiar anuncios inyectados
+      const cleanup = () => {
+        const selectors = [
+          'ins.adsbygoogle',
+          'iframe[src*="googlesyndication.com"]',
+          'iframe[src*="3nbf4.com"]',
+          'iframe[src*="nap5k.com"]',
+          'iframe[src*="gizokraijaw.net"]',
+          '[id^="google_ads"]',
+          '#nap5k-social'
+        ]
+        selectors.forEach(s => {
+          document.querySelectorAll(s).forEach(el => el.remove())
+        })
+      }
+      cleanup()
+      const timer = setInterval(cleanup, 2000)
+      return () => clearInterval(timer)
+    }
+  }, [settings.blockAds])
 
   const updateSettings = useCallback((newSettings: Partial<Settings>) => {
     const updated = saveSettings(newSettings)
@@ -143,6 +180,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         setUserId,
         setProfile,
         setBlockAds,
+        isHydrated,
       }}
     >
       {children}

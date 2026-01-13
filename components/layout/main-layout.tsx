@@ -28,30 +28,31 @@ export function MainLayout({ children }: MainLayoutProps) {
 
       {/* Main Content Area */}
       <main className="flex-1 flex relative overflow-hidden">
-        {/* Desktop Quick Settings Button */}
-        <div className="absolute top-6 right-8 z-30 hidden md:block">
-          <Link 
-            href="/settings"
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-card/40 backdrop-blur-md border border-border hover:bg-card/60 hover:scale-105 active:scale-95 transition-all text-sm font-medium"
-          >
-            <Settings className="w-4 h-4" />
-            {t("config")}
-          </Link>
-        </div>
-
         <div className="flex-1 flex flex-col overflow-hidden relative">
+          {/* Header Bar - Desktop only (Quick Settings) */}
+          <div className="hidden md:flex items-center justify-end px-8 py-4 z-30">
+            <Link 
+              href="/settings"
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-card/40 backdrop-blur-md border border-border hover:bg-card/60 hover:scale-105 active:scale-95 transition-all text-xs font-semibold uppercase tracking-wider text-foreground-muted"
+            >
+              <Settings className="w-3.5 h-3.5" />
+              {t("config")}
+            </Link>
+          </div>
           {/* Ad Info Banner - Global */}
           {!settings.blockAds && (
-            <div className="mx-4 md:mx-8 mt-4 p-3 rounded-xl bg-primary/5 border border-primary/10 flex flex-col sm:flex-row items-center gap-3 text-xs text-foreground-muted fade-in z-20">
-              <div className="flex items-center gap-2">
-                <Info className="w-4 h-4 text-primary shrink-0" />
-                <p className="leading-relaxed">
+            <div className="mx-4 md:mx-8 mb-4 p-4 rounded-2xl bg-primary/10 border border-primary/20 flex flex-col sm:flex-row items-center gap-4 text-xs text-foreground-muted shadow-lg shadow-primary/5 fade-in z-20">
+              <div className="flex items-center gap-3 flex-1">
+                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                  <Info className="w-4 h-4 text-primary" />
+                </div>
+                <p className="leading-relaxed font-medium">
                   {t("adBannerText")}
                 </p>
               </div>
               <Link 
                 href="/settings"
-                className="shrink-0 px-3 py-1.5 rounded-full bg-primary/10 text-primary font-semibold hover:bg-primary/20 transition-colors"
+                className="shrink-0 px-5 py-2.5 rounded-full bg-primary text-white font-bold hover:bg-primary/90 transition-all shadow-md active:scale-95"
               >
                 {t("adBannerSettings")}
               </Link>

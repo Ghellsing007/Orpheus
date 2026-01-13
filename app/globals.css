@@ -168,4 +168,21 @@
       opacity: 1;
     }
   }
+
+  /* Nuclear Ad Blocking */
+  .ads-blocked .adsbygoogle,
+  .ads-blocked [id^="google_ads"],
+  .ads-blocked iframe[src*="googlesyndication.com"],
+  .ads-blocked iframe[src*="3nbf4.com"],
+  .ads-blocked iframe[src*="nap5k.com"],
+  .ads-blocked iframe[src*="gizokraijaw.net"],
+  .ads-blocked [class*="ad-slot"],
+  .ads-blocked [class*="ad-container"] {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+  }
 }

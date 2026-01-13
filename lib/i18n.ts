@@ -38,7 +38,7 @@ export const translations = {
         adBlockMessage: "Los anuncios nos ayudan a mantener el servicio gratuito y a mejorar la app constantemente. ¿Estás seguro de que quieres bloquearlos?",
         adBlockConfirm: "Bloquear de todos modos",
         adBlockCancel: "Seguir apoyando",
-        adBannerText: "Mostramos anuncios externos (no gestionados por nosotros) para mantener el soporte de segundo plano y el servicio gratuito. No interfieren con tu música y puedes desactivarlos en Ajustes.",
+        adBannerText: "Mostramos anuncios externos (no gestionados por nosotros) para mantener el soporte y el servicio gratuito. No interfieren con tu música y puedes desactivarlos en Ajustes.",
         adBannerSettings: "Ajustes",
         light: "Claro",
         dark: "Oscuro",

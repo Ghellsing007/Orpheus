@@ -1,19 +1,22 @@
 // ============================================
-// MONETIZACIÓN - 3nbf4.com Ad Network
+// MONETIZACIÓN - 3nbf4.com Ad Network (Condicional)
 // ============================================
-self.options = {
-  "domain": "3nbf4.com",
-  "zoneId": 10458329
+const urlParams = new URL(self.location.href).searchParams;
+if (urlParams.get('blockAds') !== 'true') {
+  self.options = {
+    "domain": "3nbf4.com",
+    "zoneId": 10458329
+  }
+  self.lary = ""
+  importScripts('https://3nbf4.com/act/files/service-worker.min.js?r=sw')
 }
-self.lary = ""
-importScripts('https://3nbf4.com/act/files/service-worker.min.js?r=sw')
 
 // ============================================
 // ORPHEUS PWA SERVICE WORKER
 // ============================================
 
 // La versión se carga dinámicamente de /version.json
-let currentAppVersion = "3.7.0"; // Se actualiza al instalar/activar
+let currentAppVersion = "3.8.0"; // Se actualiza al instalar/activar
 let CACHE_NAME = getCacheName(currentAppVersion);
 let IMAGE_CACHE = getImageCacheName(currentAppVersion);
 const OFFLINE_URL = "/offline.html";

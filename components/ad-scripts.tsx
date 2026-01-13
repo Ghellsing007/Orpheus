@@ -4,8 +4,13 @@ import Script from "next/script"
 import { useSettings } from "@/contexts/settings-context"
 
 export function AdScripts() {
-  const { blockAds } = useSettings()
+  const { blockAds, isHydrated } = useSettings()
   
+  // No cargar nada hasta que los ajustes estén hidratados desde localStorage
+  if (!isHydrated) {
+    return null
+  }
+
   // Si los anuncios están bloqueados por el usuario, no cargamos los scripts de terceros
   if (blockAds) {
     return null

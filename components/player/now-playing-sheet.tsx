@@ -21,6 +21,7 @@ import Link from "next/link"
 import { usePlayer } from "@/contexts/player-context"
 import { useQueue } from "@/contexts/queue-context"
 import { formatDuration, cn } from "@/lib/utils"
+import { useTranslations } from "@/hooks/use-translations"
 import { useState, useEffect } from "react"
 import { getLikedSongs, toggleLikedSong } from "@/lib/storage"
 import { api } from "@/services/api"
@@ -52,6 +53,7 @@ export function NowPlayingSheet({ open, onClose, initialTab = "playing" }: NowPl
     setPlayerView,
   } = usePlayer()
   const { playNext, playPrevious, items, currentIndex, playFromQueue, removeFromQueue } = useQueue()
+  const { t } = useTranslations()
   const [activeTab, setActiveTab] = useState<Tab>(initialTab)
   const [isLiked, setIsLiked] = useState(false)
   const [currentLyricIndex, setCurrentLyricIndex] = useState(0)
@@ -149,7 +151,9 @@ export function NowPlayingSheet({ open, onClose, initialTab = "playing" }: NowPl
           >
             <ChevronDown className="w-6 h-6" />
           </button>
-          <span className="text-sm font-medium text-foreground-muted">Reproduciendo ahora</span>
+          <span className="text-sm font-medium text-foreground-muted uppercase tracking-wider">
+            {activeTab === "playing" ? t("playing") : activeTab === "lyrics" ? t("lyrics") : t("queue")}
+          </span>
           <div className="w-10" />
         </div>
 
@@ -158,7 +162,6 @@ export function NowPlayingSheet({ open, onClose, initialTab = "playing" }: NowPl
           {activeTab === "playing" && !HIDE_NOW_PLAYING_TAB && (
             <>
               {/* Album Art */}
-// ... rest of the content (skipped for brevety in replacement chunk, but I must include it)
               <div className="flex-1 flex items-center justify-center py-6">
                 <div className="relative w-full max-w-[320px] md:max-w-[540px] aspect-video rounded-2xl overflow-hidden shadow-2xl shadow-black/50 border border-border/60 bg-card/70">
                   <img
@@ -396,24 +399,27 @@ export function NowPlayingSheet({ open, onClose, initialTab = "playing" }: NowPl
         </div>
 
         {/* Tab Bar */}
-        <div className="flex border-t border-border">
+        <div className="flex border-t border-border bg-card/50">
           {[
-            { id: "playing" as Tab, icon: Play, label: "Reproduciendo" },
-            { id: "lyrics" as Tab, icon: Mic2, label: "Letra" },
-            { id: "queue" as Tab, icon: ListMusic, label: "Cola" },
+            { id: "playing" as Tab, icon: Play, label: t("playing") },
+            { id: "lyrics" as Tab, icon: Mic2, label: t("lyrics") },
+            { id: "queue" as Tab, icon: ListMusic, label: t("queue") },
           ]
-            .filter((tab) => !HIDE_NOW_PLAYING_TAB || tab.id !== "playing")
+            .filter((tab) => {
+              if (tab.id === "playing" && HIDE_NOW_PLAYING_TAB) return false
+              return true
+            })
             .map(({ id, icon: Icon, label }) => (
             <button
               key={id}
               onClick={() => setActiveTab(id)}
               className={cn(
-                "flex-1 flex flex-col items-center gap-1 py-3 transition-colors",
-                activeTab === id ? "text-primary" : "text-foreground-muted hover:text-foreground",
+                "flex-1 flex flex-col items-center gap-1 py-3 transition-all",
+                activeTab === id ? "text-primary scale-110" : "text-foreground-muted hover:text-foreground opacity-70",
               )}
             >
-              <Icon className="w-5 h-5" />
-              <span className="text-xs">{label}</span>
+              <Icon className={cn("w-5 h-5", activeTab === id && "fill-current")} />
+              <span className="text-[10px] font-medium">{label}</span>
             </button>
           ))}
         </div>

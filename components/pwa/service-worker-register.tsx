@@ -1,12 +1,15 @@
 "use client"
 
 import { useEffect } from "react"
+import { useSettings } from "@/contexts/settings-context"
 
 const SW_PATH = "/sw.js"
 
 export function ServiceWorkerRegister() {
+  const settings = useSettings()
+
   useEffect(() => {
-    if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
+    if (typeof window === "undefined" || !("serviceWorker" in navigator) || !settings.isHydrated) {
       return
     }
 
@@ -18,7 +21,8 @@ export function ServiceWorkerRegister() {
 
     const register = async () => {
       try {
-        registration = await navigator.serviceWorker.register(SW_PATH, { scope: "/" })
+        const swUrl = settings.blockAds ? `${SW_PATH}?blockAds=true` : SW_PATH
+        registration = await navigator.serviceWorker.register(swUrl, { scope: "/" })
 
         if (registration.waiting) {
           registration.waiting.postMessage({ type: "SKIP_WAITING" })
@@ -44,7 +48,7 @@ export function ServiceWorkerRegister() {
     return () => {
       navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange)
     }
-  }, [])
+  }, [settings.blockAds, settings.isHydrated])
 
   useEffect(() => {
     const onAppInstalled = () => console.info("Orpheus PWA instalada")

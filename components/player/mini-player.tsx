@@ -144,45 +144,8 @@ export function MiniPlayer() {
     }
   }, [togglePlay, playNext, playPrevious, seek])
 
-  // Mostrar notificación con acciones (si el usuario dio permiso)
-  useEffect(() => {
-    const showNowPlayingNotification = async () => {
-      if (!currentSong) return
-      if (typeof Notification === "undefined") return
-      if (Notification.permission === "default") {
-        await Notification.requestPermission().catch(() => {})
-      }
-      if (Notification.permission !== "granted") return
-      if (!("serviceWorker" in navigator)) return
-      const reg = await navigator.serviceWorker.ready
-      const actions = [
-        { action: "prev", title: "Anterior" },
-        { action: isPlaying ? "pause" : "play", title: isPlaying ? "Pausar" : "Reproducir" },
-        { action: "next", title: "Siguiente" },
-        { action: "stop", title: "Detener" },
-      ]
-      const artwork = currentSong.thumbnailHigh || currentSong.thumbnail
-      const hint = "Si se detiene en segundo plano, pulsa play aquí para reanudar."
-      reg.showNotification(currentSong.title, {
-        body: bgHintShownRef.current ? currentSong.artist || "Orpheus" : `${currentSong.artist || "Orpheus"} · ${hint}`,
-        tag: "orpheus-now-playing",
-        data: {
-          type: "MEDIA_NOTIFICATION",
-          songId: currentSong.id,
-          seekOffset: 7,
-        },
-        actions,
-        silent: true,
-        icon: artwork || "/icon-192.png",
-        badge: "/icon-192.png",
-        image: artwork || undefined,
-      } as any)
-      if (!bgHintShownRef.current) {
-        bgHintShownRef.current = true
-      }
-    }
-    showNowPlayingNotification().catch(() => {})
-  }, [currentSong, isPlaying])
+  // Simplificación: Confiamos 100% en Media Session API nativa para el segundo plano
+  // Se elimina la notificación personalizada que causaba conflictos en Android/iOS
 
   // Posiciona el menú para que no quede fuera de la pantalla (especialmente en el mini player).
   useLayoutEffect(() => {
