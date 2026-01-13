@@ -31,6 +31,7 @@ interface SettingsContextType extends Settings {
   clearAllCache: () => void
   setUserId: (id: string) => void
   setProfile: (profile: UserProfile | null) => void
+  setBlockAds: (block: boolean) => void
 }
 
 const SettingsContext = createContext<SettingsContextType | null>(null)
@@ -52,8 +53,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   // Apply accent color to CSS variables
   useEffect(() => {
     const colors = ACCENT_COLORS[settings.accentColor]
-    document.documentElement.style.setProperty("--color-primary", colors.primary)
-    document.documentElement.style.setProperty("--color-accent", colors.accent)
+    document.documentElement.style.setProperty("--primary", colors.primary)
+    document.documentElement.style.setProperty("--accent", colors.accent)
   }, [settings.accentColor])
 
   const updateSettings = useCallback((newSettings: Partial<Settings>) => {
@@ -115,6 +116,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     clearCache()
   }, [])
 
+  const setBlockAds = useCallback(
+    (blockAds: boolean) => {
+      updateSettings({ blockAds })
+    },
+    [updateSettings],
+  )
+
   return (
     <SettingsContext.Provider
       value={{
@@ -134,6 +142,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         clearAllCache,
         setUserId,
         setProfile,
+        setBlockAds,
       }}
     >
       {children}

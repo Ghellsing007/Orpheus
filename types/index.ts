@@ -18,6 +18,8 @@ export interface Song {
   streamUrl?: string
 }
 
+
+
 export interface Playlist {
   id: string
   ytid?: string
@@ -136,6 +138,7 @@ export interface Settings {
   streamQuality: StreamQuality
   proxyMode: "direct" | "proxy" | "redirect"
   autoSkipSponsor: boolean
+  blockAds: boolean
 }
 
 export type HomeSectionType = "featuredPlaylists" | "trendingSongs" | "popularArtists" | "moodPlaylists" | "recommendations"

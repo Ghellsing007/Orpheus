@@ -378,6 +378,7 @@ class ApiService {
     email?: string
     avatarUrl?: string
     phone?: string
+    role?: string
   }): Promise<UserProfile> {
     const data = await this.fetchJson<UserProfile>("/auth/register", {
       method: "POST",

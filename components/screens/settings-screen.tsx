@@ -16,20 +16,20 @@ import {
   RefreshCw,
   ChevronRight,
   Shield,
+  ShieldCheck,
 } from "lucide-react"
 import { useSettings } from "@/contexts/settings-context"
 import { cn } from "@/lib/utils"
 import type { AccentColor, Language, StreamQuality, Theme } from "@/types"
 import { ACCENT_COLORS } from "@/lib/constants"
+import { useTranslations } from "@/hooks/use-translations"
 
 export function SettingsScreen() {
   const settings = useSettings()
+  const { t } = useTranslations()
   const [appVersion, setAppVersion] = useState("v1.0.0")
-  const [showExportModal, setShowExportModal] = useState(false)
-  const [showImportModal, setShowImportModal] = useState(false)
-  const [importData, setImportData] = useState("")
   const [notification, setNotification] = useState("")
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [showAdModal, setShowAdModal] = useState(false)
 
   const languages: { id: Language; label: string; flag: string }[] = [
     { id: "es", label: "Español", flag: "🇪🇸" },
@@ -55,50 +55,6 @@ export function SettingsScreen() {
     setTimeout(() => setNotification(""), 3000)
   }
 
-  const handleExport = () => {
-    const data = settings.exportData()
-    const blob = new Blob([data], { type: "application/json" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `orpheus-backup-${new Date().toISOString().split("T")[0]}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-    showNotification("Datos exportados correctamente")
-  }
-
-  const handleImport = () => {
-    const success = settings.importData(importData)
-    if (success) {
-      setShowImportModal(false)
-      setImportData("")
-      showNotification("Datos importados correctamente")
-    } else {
-      showNotification("Error al importar datos")
-    }
-  }
-
-  const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setImportData(e.target?.result as string)
-      }
-      reader.readAsText(file)
-    }
-  }
-
-  const handleClearCache = () => {
-    settings.clearAllCache()
-    showNotification("Caché limpiado correctamente")
-  }
-
-  const handleRegenerateSession = () => {
-    settings.regenerateSession()
-    showNotification("Sesión regenerada")
-  }
-
   useEffect(() => {
     fetch("/version.json", { cache: "no-store" })
       .then((res) => {
@@ -115,7 +71,7 @@ export function SettingsScreen() {
 
   return (
     <div className="px-4 md:px-8 py-6 max-w-2xl mx-auto space-y-8">
-      <h1 className="text-2xl md:text-3xl font-bold">Ajustes</h1>
+      <h1 className="text-2xl md:text-3xl font-bold">{t("settings")}</h1>
 
       {/* Notification */}
       {notification && (
@@ -128,7 +84,7 @@ export function SettingsScreen() {
       <section className="space-y-3">
         <div className="flex items-center gap-3 text-foreground-muted">
           <Globe className="w-5 h-5" />
-          <span className="font-medium">Idioma</span>
+          <span className="font-medium">{t("language")}</span>
         </div>
         <div className="grid grid-cols-2 gap-2">
           {languages.map(({ id, label, flag }) => (
@@ -153,34 +109,38 @@ export function SettingsScreen() {
       {/* Theme */}
       <section className="space-y-3">
         <div className="flex items-center gap-3 text-foreground-muted">
-          {settings.theme === "dark" ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-          <span className="font-medium">Tema</span>
+          <Palette className="w-5 h-5" />
+          <span className="font-medium">{t("theme")}</span>
         </div>
         <div className="grid grid-cols-2 gap-2">
-          {(["dark", "light"] as Theme[]).map((theme) => (
-            <button
-              key={theme}
-              onClick={() => settings.setTheme(theme)}
-              className={cn(
-                "flex items-center justify-between px-4 py-3 rounded-xl transition-all",
-                settings.theme === theme ? "bg-primary text-primary-foreground" : "bg-card hover:bg-card-hover",
-              )}
-            >
-              <span className="flex items-center gap-2">
-                {theme === "dark" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-                <span>{theme === "dark" ? "Oscuro" : "Claro"}</span>
-              </span>
-              {settings.theme === theme && <Check className="w-5 h-5" />}
-            </button>
-          ))}
+          <button
+            onClick={() => settings.setTheme("dark")}
+            className={cn(
+              "flex items-center justify-center gap-3 px-4 py-4 rounded-xl transition-all",
+              settings.theme === "dark" ? "bg-primary text-primary-foreground shadow-lg" : "bg-card hover:bg-card-hover",
+            )}
+          >
+            <Moon className="w-5 h-5" />
+            <span className="font-medium">{t("dark")}</span>
+          </button>
+          <button
+            onClick={() => settings.setTheme("light")}
+            className={cn(
+              "flex items-center justify-center gap-3 px-4 py-4 rounded-xl transition-all",
+              settings.theme === "light" ? "bg-primary text-primary-foreground shadow-lg" : "bg-card hover:bg-card-hover",
+            )}
+          >
+            <Sun className="w-5 h-5" />
+            <span className="font-medium">{t("light")}</span>
+          </button>
         </div>
       </section>
 
       {/* Accent Color */}
       <section className="space-y-3">
         <div className="flex items-center gap-3 text-foreground-muted">
-          <Palette className="w-5 h-5" />
-          <span className="font-medium">Color de acento</span>
+          <div className="w-5 h-5 rounded-full border-2 border-current" />
+          <span className="font-medium">{t("accentColor")}</span>
         </div>
         <div className="flex gap-3 flex-wrap">
           {accentColors.map(({ id, label }) => (
@@ -200,11 +160,11 @@ export function SettingsScreen() {
         </div>
       </section>
 
-      {/* Stream Quality */}
+      {/* Audio Quality */}
       <section className="space-y-3">
         <div className="flex items-center gap-3 text-foreground-muted">
           <Volume2 className="w-5 h-5" />
-          <span className="font-medium">Calidad de streaming</span>
+          <span className="font-medium">{t("quality")}</span>
         </div>
         <div className="space-y-2">
           {qualities.map(({ id, label, description }) => (
@@ -242,7 +202,7 @@ export function SettingsScreen() {
           <div className="flex items-center gap-3">
             <Zap className="w-5 h-5 text-foreground-muted" />
             <div className="text-left">
-              <div className="font-medium">Saltar sponsors automáticamente</div>
+              <div className="font-medium">{t("autoSkipSponsor")}</div>
               <div className="text-sm text-foreground-muted">Usa SponsorBlock para saltar segmentos</div>
             </div>
           </div>
@@ -262,55 +222,38 @@ export function SettingsScreen() {
         </button>
       </section>
 
-      {/* Data Management */}
+      {/* Ad Blocker */}
       <section className="space-y-3">
-        <div className="flex items-center gap-3 text-foreground-muted mb-2">
-          <Shield className="w-5 h-5" />
-          <span className="font-medium">Gestión de datos</span>
-        </div>
-
         <button
-          onClick={handleExport}
+          onClick={() => {
+            if (!settings.blockAds) {
+              setShowAdModal(true)
+            } else {
+              settings.setBlockAds(false)
+            }
+          }}
           className="w-full flex items-center justify-between px-4 py-4 rounded-xl bg-card hover:bg-card-hover transition-colors"
         >
           <div className="flex items-center gap-3">
-            <Save className="w-5 h-5 text-foreground-muted" />
-            <span>Exportar datos</span>
+            <ShieldCheck className="w-5 h-5 text-primary" />
+            <div className="text-left">
+              <div className="font-medium">{t("blockAds")}</div>
+              <div className="text-sm text-foreground-muted">{t("blockAdsDesc")}</div>
+            </div>
           </div>
-          <ChevronRight className="w-5 h-5 text-foreground-muted" />
-        </button>
-
-        <button
-          onClick={() => setShowImportModal(true)}
-          className="w-full flex items-center justify-between px-4 py-4 rounded-xl bg-card hover:bg-card-hover transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <Upload className="w-5 h-5 text-foreground-muted" />
-            <span>Importar datos</span>
+          <div
+            className={cn(
+              "w-12 h-7 rounded-full transition-colors relative",
+              settings.blockAds ? "bg-primary" : "bg-card-hover",
+            )}
+          >
+            <div
+              className={cn(
+                "absolute top-1 w-5 h-5 rounded-full bg-white transition-transform",
+                settings.blockAds ? "translate-x-6" : "translate-x-1",
+              )}
+            />
           </div>
-          <ChevronRight className="w-5 h-5 text-foreground-muted" />
-        </button>
-
-        <button
-          onClick={handleClearCache}
-          className="w-full flex items-center justify-between px-4 py-4 rounded-xl bg-card hover:bg-card-hover transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <Trash2 className="w-5 h-5 text-foreground-muted" />
-            <span>Limpiar caché</span>
-          </div>
-          <ChevronRight className="w-5 h-5 text-foreground-muted" />
-        </button>
-
-        <button
-          onClick={handleRegenerateSession}
-          className="w-full flex items-center justify-between px-4 py-4 rounded-xl bg-card hover:bg-card-hover transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <RefreshCw className="w-5 h-5 text-foreground-muted" />
-            <span>Regenerar sesión</span>
-          </div>
-          <ChevronRight className="w-5 h-5 text-foreground-muted" />
         </button>
       </section>
 
@@ -320,41 +263,37 @@ export function SettingsScreen() {
         <p className="mt-1">Orpheus {appVersion}</p>
       </section>
 
-      {/* Import Modal */}
-      {showImportModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-card rounded-2xl p-6 max-w-md w-full space-y-4 fade-in">
-            <h3 className="text-xl font-bold">Importar datos</h3>
-            <p className="text-sm text-foreground-muted">Selecciona un archivo JSON o pega los datos directamente.</p>
-            <input ref={fileInputRef} type="file" accept=".json" onChange={handleFileImport} className="hidden" />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full px-4 py-3 bg-card-hover rounded-xl text-center hover:bg-primary/10 transition-colors"
-            >
-              Seleccionar archivo
-            </button>
-            <textarea
-              value={importData}
-              onChange={(e) => setImportData(e.target.value)}
-              placeholder="O pega los datos JSON aquí..."
-              className="w-full h-32 px-4 py-3 bg-background rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-            <div className="flex gap-2">
+      {/* Ad Block Modal */}
+      {showAdModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 fade-in">
+          <div className="bg-card border border-border rounded-2xl p-6 max-w-sm w-full space-y-6 shadow-2xl">
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <ShieldCheck className="w-8 h-8 text-primary" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold">{t("adBlockTitle")}</h3>
+                <p className="text-sm text-foreground-muted leading-relaxed">
+                  {t("adBlockMessage")}
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex flex-col gap-2">
               <button
                 onClick={() => {
-                  setShowImportModal(false)
-                  setImportData("")
+                  settings.setBlockAds(true)
+                  setShowAdModal(false)
                 }}
-                className="flex-1 px-4 py-3 bg-card-hover rounded-xl hover:bg-card transition-colors"
+                className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:bg-primary/90 transition-all active:scale-95"
               >
-                Cancelar
+                {t("adBlockConfirm")}
               </button>
               <button
-                onClick={handleImport}
-                disabled={!importData}
-                className="flex-1 px-4 py-3 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50"
+                onClick={() => setShowAdModal(false)}
+                className="w-full py-3 bg-card-hover text-foreground rounded-xl font-medium hover:bg-card transition-all active:scale-95"
               >
-                Importar
+                {t("adBlockCancel")}
               </button>
             </div>
           </div>

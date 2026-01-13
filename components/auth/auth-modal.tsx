@@ -86,10 +86,10 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
             <OrpheusLogo size={40} showText={false} />
             <div>
               <p className="text-sm font-semibold">
-                {mode === "login" ? "Iniciar sesión en Orpheus" : "Crear tu cuenta"}
+                {mode === "login" ? "Sincronizar cuenta" : "Nueva Sincronización"}
               </p>
               <p className="text-xs text-foreground-muted">
-                {mode === "login" ? "Bienvenido de vuelta" : "Completa tus datos para empezar"}
+                {mode === "login" ? "Coming Soon: Conecta tus dispositivos" : "Próximamente: Sincroniza tus playlists"}
               </p>
             </div>
           </div>
@@ -180,7 +180,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
             disabled={loading}
             className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-semibold hover:opacity-90 transition disabled:opacity-60"
           >
-            {loading ? "Procesando..." : mode === "login" ? "Continuar" : "Registrarse"}
+            {loading ? "Procesando..." : mode === "login" ? "Coming Soon" : "Notificarme"}
           </button>
 
           <div className="text-center text-xs text-foreground-muted">

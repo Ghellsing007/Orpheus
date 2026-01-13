@@ -11,24 +11,26 @@ import { AuthModal } from "@/components/auth/auth-modal"
 import { AvatarInitials } from "@/components/ui/avatar-initials"
 import { CreatePlaylistModal } from "@/components/playlists/create-playlist-modal"
 import { AdSlot } from "@/components/ui/ad-slot"
-
-const navItems = [
-  { href: "/", icon: Home, label: "Inicio" },
-  { href: "/search", icon: Search, label: "Buscar" },
-  { href: "/community", icon: Search, label: "Comunidad" }, // Icon will be changed manually later or kept for now
-  { href: "/magazine", icon: Search, label: "Revista" },
-]
-
-const libraryItems = [
-  { href: "/library", icon: Library, label: "Tu biblioteca" },
-  { href: "/library/liked", icon: Heart, label: "Canciones favoritas" },
-  { href: "/library/recent", icon: Clock, label: "Reproducido reciente" },
-]
+import { useTranslations } from "@/hooks/use-translations"
 
 export function Sidebar() {
   const pathname = usePathname()
   const { userId, setUserId, profile, setProfile, role } = useSettings()
+  const { t } = useTranslations()
   const [authOpen, setAuthOpen] = useState(false)
+  
+  const navItems = [
+    { href: "/", icon: Home, label: t("home") },
+    { href: "/search", icon: Search, label: t("search") },
+    { href: "/community", icon: Search, label: t("community") },
+    { href: "/magazine", icon: Search, label: t("magazine") },
+  ]
+
+  const libraryItems = [
+    { href: "/library", icon: Library, label: t("yourLibrary") },
+    { href: "/library/liked", icon: Heart, label: t("likedSongs") },
+    { href: "/library/recent", icon: Clock, label: t("recentPlayed") },
+  ]
   const [createOpen, setCreateOpen] = useState(false)
   const [appVersion, setAppVersion] = useState<string | null>(null)
 
@@ -120,67 +122,68 @@ export function Sidebar() {
           <div className="w-6 h-6 rounded-lg bg-card flex items-center justify-center border border-border">
             <Plus className="w-3.5 h-3.5" />
           </div>
-          <span className="text-sm font-medium">Crear playlist</span>
+          <span className="text-sm font-medium">{t("createPlaylist")}</span>
         </button>
       </nav>
 
-      <div className="mx-4 my-4 h-px bg-border" />
+      <div className="flex-1" />
 
-      {/* Settings */}
-      <nav className="px-2 space-y-1">
+      {/* Settings Section */}
+      <div className="px-2 mt-auto mb-2">
+        <div className="px-3 mb-2 text-[10px] font-bold text-foreground-muted uppercase tracking-wider">
+          {t("preferences")}
+        </div>
         <Link
           href="/settings"
           className={cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all",
+            "flex items-center gap-3 px-3 py-3 rounded-xl transition-all group",
             pathname === "/settings"
-              ? "bg-primary/20 text-foreground shadow-sm border border-primary/20"
+              ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
               : "text-foreground-muted hover:text-foreground hover:bg-card/60",
           )}
         >
-          <Settings className="w-5 h-5" />
-          <span className="text-sm font-medium">Ajustes</span>
+          <Settings className={cn("w-5 h-5 transition-transform group-hover:rotate-45", pathname === "/settings" ? "text-primary-foreground" : "text-primary")} />
+          <span className="text-sm font-semibold">{t("config")}</span>
         </Link>
-        {process.env.NEXT_PUBLIC_SHOW_HOUSE_ADS !== "false" && (
-          <div className="px-4 mt-2">
-            <AdSlot type="sidebar" className="h-32" />
-          </div>
-        )}
-      </nav>
+      </div>
+
+      <div className="mx-4 mb-4 h-px bg-border/40" />
 
       {/* CTA */}
       <div className="px-4 py-5">
         {role !== "guest" && userId ? (
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border">
+          <div className="flex flex-col items-center p-3 rounded-xl bg-card border border-border">
             {profile?.avatarUrl ? (
               <img src={profile.avatarUrl} alt="avatar" className="w-10 h-10 rounded-full object-cover border border-border" />
             ) : (
               <AvatarInitials name={profile?.displayName || profile?.username || userId} />
             )}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold truncate">{profile?.displayName || profile?.username || userId}</p>
-              <p className="text-xs text-foreground-muted truncate">Sesión activa</p>
+            <div className="flex items-center gap-2 mb-2">
+              <AvatarInitials name={profile?.displayName || "User"} size={24} />
+              <span className="text-xs font-semibold truncate">{profile?.displayName || "Usuario"}</span>
             </div>
             <button
               onClick={() => {
                 setUserId("")
                 setProfile(null)
               }}
-              className="text-xs text-foreground-muted hover:text-foreground"
+              className="w-full py-2 rounded-lg bg-card-hover text-xs font-medium hover:bg-card transition-colors"
             >
-              Cerrar
+              {t("logout")}
             </button>
           </div>
         ) : (
           <>
             <button
+              type="button"
               onClick={() => setAuthOpen(true)}
               className="w-full flex items-center justify-center gap-3 h-11 rounded-full bg-card border border-border text-foreground hover:bg-card/70 transition-colors"
             >
               <LogIn className="w-4 h-4" />
-              <span className="text-sm font-semibold">Iniciar sesión</span>
+              <span className="text-sm font-semibold">{t("comingSoon")}</span>
             </button>
-            <p className="text-xs text-foreground-muted text-center mt-2">
-              Inicia sesión para crear playlists y guardar tu música favorita
+            <p className="text-xs text-foreground-muted text-center mt-2 px-2">
+              {t("syncSoon")}
             </p>
           </>
         )}
@@ -189,13 +192,13 @@ export function Sidebar() {
       {/* Footer */}
       <div className="px-4 py-4 border-t border-border space-y-2 text-xs text-foreground-muted text-center">
         <Link href="/billing" className="block hover:text-foreground transition-colors">
-          Planes y Facturación
+          {t("billing")}
         </Link>
         <Link href="/help" className="block hover:text-foreground transition-colors">
-          ¿Necesitas ayuda?
+          {t("help")}
         </Link>
         <div className="flex justify-center gap-2 flex-wrap">
-          <Link href="/legal/privacy" className="hover:text-foreground underline underline-offset-2">Privacidad</Link>
+          <Link href="/legal/privacy" className="hover:text-foreground underline underline-offset-2">{t("privacy")}</Link>
           <span className="text-foreground-subtle">•</span>
           <Link href="/legal/terms" className="hover:text-foreground underline underline-offset-2">Términos</Link>
           <span className="text-foreground-subtle">•</span>

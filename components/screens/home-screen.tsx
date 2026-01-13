@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { Play, Sparkles } from "lucide-react"
+import { Play, Sparkles, Info } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { CarouselSection } from "@/components/sections/carousel-section"
 import { PlaylistCard } from "@/components/cards/playlist-card"
@@ -17,6 +17,7 @@ import { useSettings } from "@/contexts/settings-context"
 import { getRecentlyPlayed } from "@/lib/storage"
 import { AuthModal } from "@/components/auth/auth-modal"
 import { useVideoAvailability } from "@/hooks/use-video-availability"
+import { useTranslations } from "@/hooks/use-translations"
 
 type CuratedResolvedPayload = {
   trendingSongs?: (HomePreview | SongPreview)[]
@@ -26,9 +27,11 @@ type CuratedResolvedPayload = {
 }
 
 export function HomeScreen() {
+  const settings = useSettings()
   const [authOpen, setAuthOpen] = useState(false)
   const { setQueue } = useQueue()
-  const { userId } = useSettings()
+  const { userId } = settings
+  const { t } = useTranslations()
   
   const curatedQuery = useQuery({
     queryKey: ["home", "curated"],
@@ -147,7 +150,7 @@ export function HomeScreen() {
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3 text-foreground-muted">
             <div className="w-12 h-12 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
-            <p className="text-sm">Cargando tu música...</p>
+            <p className="text-sm">Orpheus Music</p>
           </div>
         </div>
         <div className="relative space-y-8 pb-8 opacity-70">
@@ -173,31 +176,23 @@ export function HomeScreen() {
           <div className="max-w-2xl">
             <div className="flex items-center gap-2 text-primary mb-4">
               <Sparkles className="w-5 h-5" />
-              <span className="text-sm font-medium">Bienvenido a Orpheus</span>
+              <span className="text-sm font-medium">{t("welcome")}</span>
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-balance leading-tight">
-              Descubre nueva musica
+              {t("discover")}
             </h1>
             <p className="text-lg text-foreground-muted mb-8 max-w-lg leading-relaxed">
-              Explora millones de canciones, crea playlists personalizadas y disfruta de la mejor experiencia musical.
+              {t("heroDesc")}
             </p>
             <button
               onClick={handlePlayAll}
               className="inline-flex items-center gap-3 px-8 py-4 rounded-full gradient-primary text-white font-semibold text-lg hover:scale-105 active:scale-95 transition-transform shadow-xl shadow-primary/30"
             >
               <Play className="w-6 h-6" fill="currentColor" />
-              Comenzar a escuchar
+              {t("startListening")}
             </button>
 
-            <div className="mt-6 flex flex-col sm:flex-row gap-3 w-full">
-              <button
-                type="button"
-                onClick={() => setAuthOpen(true)}
-                className="inline-flex items-center justify-center w-full md:w-auto px-6 py-3 rounded-full border border-white/30 text-sm font-semibold text-white/90 hover:text-white transition-opacity"
-              >
-                Iniciar sesión
-              </button>
-            </div>
+            
             {error && <p className="text-destructive mt-3 text-sm">{error}</p>}
           </div>
         </div>
@@ -206,7 +201,7 @@ export function HomeScreen() {
       {/* Main Content */}
       <div className="space-y-10 md:px-4">
         {/* Featured Playlists */}
-        <CarouselSection title="Playlists destacadas" subtitle="Las mejores selecciones para ti">
+        <CarouselSection title={t("featuredPlaylists")} subtitle="Las mejores selecciones para ti">
           {playlists.map((playlist) => (
             <PlaylistCard key={playlist.id} playlist={playlist} />
           ))}
@@ -214,7 +209,7 @@ export function HomeScreen() {
 
         {/* Trending */}
         {filteredTrending.length > 0 && (
-          <CarouselSection title="Tendencias" subtitle="Lo mas escuchado ahora">
+          <CarouselSection title={t("trending")} subtitle="Lo mas escuchado ahora">
             {filteredTrending.map((song, index) => (
               <div key={song.id} className="w-40 flex-shrink-0 group">
                 <div className="relative aspect-square rounded-xl overflow-hidden mb-3 shadow-lg shadow-black/20">
@@ -287,7 +282,7 @@ export function HomeScreen() {
 
         {/* Artists */}
         {fallbackArtists.length > 0 && (
-          <CarouselSection title="Artistas populares" subtitle="Descubre nuevos talentos">
+          <CarouselSection title={t("popularArtists")} subtitle="Descubre nuevos talentos">
             {fallbackArtists.map((artist) => (
               <ArtistCard key={artist.id} artist={artist} />
             ))}
@@ -298,7 +293,7 @@ export function HomeScreen() {
         {filteredRecommendations.length > 0 && (
           <section className="space-y-4">
             <div className="px-4 md:px-0">
-              <h2 className="text-xl md:text-2xl font-bold">Recomendaciones para ti</h2>
+              <h2 className="text-xl md:text-2xl font-bold">{t("recommendations")}</h2>
               <p className="text-sm text-foreground-muted mt-1">Basado en lo que escuchas</p>
             </div>
             <div className="bg-card/50 rounded-xl p-2 mx-4 md:mx-0">
@@ -317,7 +312,7 @@ export function HomeScreen() {
 
         {/* Recently Played */}
         {recent.length > 0 && (
-          <CarouselSection title="Escuchado recientemente" subtitle="Vuelve a disfrutar tus favoritos">
+          <CarouselSection title={t("recentlyPlayed")} subtitle="Vuelve a disfrutar tus favoritos">
             {recent.map((song, index) => (
               <div key={song.id} className="w-40 flex-shrink-0 group">
                 <div className="relative aspect-square rounded-xl overflow-hidden mb-3 shadow-lg shadow-black/20">

@@ -4,16 +4,18 @@ import { Home, Search, Library, Settings } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-
-const navItems = [
-  { href: "/", icon: Home, label: "Inicio" },
-  { href: "/search", icon: Search, label: "Buscar" },
-  { href: "/library", icon: Library, label: "Biblioteca" },
-  { href: "/settings", icon: Settings, label: "Ajustes" },
-]
+import { useTranslations } from "@/hooks/use-translations"
 
 export function BottomNav() {
   const pathname = usePathname()
+  const { t } = useTranslations()
+
+  const navItems = [
+    { href: "/", icon: Home, label: t("home") },
+    { href: "/search", icon: Search, label: t("search") },
+    { href: "/library", icon: Library, label: t("library") },
+    { href: "/settings", icon: Settings, label: t("settings") },
+  ]
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 glass border-t border-border md:hidden">

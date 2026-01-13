@@ -19,6 +19,7 @@ export const DEFAULT_SETTINGS = {
   streamQuality: "high" as const,
   proxyMode: "direct" as const,
   autoSkipSponsor: true,
+  blockAds: false,
 }
 
 export const ACCENT_COLORS = {
