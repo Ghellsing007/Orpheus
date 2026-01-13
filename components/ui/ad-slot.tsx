@@ -44,7 +44,9 @@ export function AdSlot({ type, className }: AdSlotProps) {
     return () => clearInterval(timer)
   }, [])
 
-  if (role === "premium") return null
+  // Desactivar house ads via variable de entorno o si es premium
+  const showHouseAds = process.env.NEXT_PUBLIC_SHOW_HOUSE_ADS !== "false"
+  if (!showHouseAds || role === "premium") return null
 
   const ad = HOUSE_ADS[adIndex]
   const isVertical = type === "sidebar" || type === "square"

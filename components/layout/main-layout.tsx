@@ -32,13 +32,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           <BottomNav />
         </div>
 
-        {/* Ad Column - Desktop only */}
-        <aside className="hidden xl:flex w-72 border-l border-border/50 flex-col p-4 gap-4 bg-card/5">
-          <AdSlot type="sidebar" className="h-full max-h-[600px]" />
-          <div className="flex-1 flex items-center justify-center border border-dashed border-border/40 rounded-xl">
-             <span className="text-[10px] text-foreground-muted rotate-90">Sponsorship Space</span>
-          </div>
-        </aside>
+       
       </main>
     </div>
   )

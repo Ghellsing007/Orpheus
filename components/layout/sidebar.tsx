@@ -140,9 +140,11 @@ export function Sidebar() {
           <Settings className="w-5 h-5" />
           <span className="text-sm font-medium">Ajustes</span>
         </Link>
-        <div className="px-4 mt-2">
-          <AdSlot type="sidebar" className="h-32" />
-        </div>
+        {process.env.NEXT_PUBLIC_SHOW_HOUSE_ADS !== "false" && (
+          <div className="px-4 mt-2">
+            <AdSlot type="sidebar" className="h-32" />
+          </div>
+        )}
       </nav>
 
       {/* CTA */}

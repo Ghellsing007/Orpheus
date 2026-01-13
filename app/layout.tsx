@@ -72,12 +72,15 @@ export default function RootLayout({
           data-website-id="85302052-7bec-42b5-8aed-e2a8d0f5c232"
           strategy="afterInteractive"
         />
-        <Script 
-          src="https://quge5.com/88/tag.min.js"
-          data-zone="201617"
-          data-cfasync="false"
-          strategy="afterInteractive"
-        />
+        {/* Anuncios de terceros - desactivar con NEXT_PUBLIC_SHOW_THIRD_PARTY_ADS=false */}
+        {process.env.NEXT_PUBLIC_SHOW_THIRD_PARTY_ADS !== "false" && (
+          <Script 
+            src="https://quge5.com/88/tag.min.js"
+            data-zone="201617"
+            data-cfasync="false"
+            strategy="afterInteractive"
+          />
+        )}
       </body>
     </html>
   )
