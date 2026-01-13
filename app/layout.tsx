@@ -56,6 +56,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="application-name" content="Orpheus" />
+        <meta name="google-adsense-account" content="ca-pub-2109167817151815" />
         <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2109167817151815"
