@@ -40,8 +40,17 @@ export function AdSlot({ type, className }: AdSlotProps) {
            </p>
         </div>
         
-        {/* Aquí se integraría el script de AdSense o similar */}
-        {/* <ins className="adsbygoogle" ... /> */}
+        {/* Google AdSense Unit */}
+        <div className="w-full flex justify-center">
+          <ins
+            className="adsbygoogle"
+            style={{ display: "block", width: "100%", height: "100%" }}
+            data-ad-client="ca-pub-2109167817151815"
+            data-ad-slot="auto"
+            data-ad-format="auto"
+            data-full-width-responsive="true"
+          ></ins>
+        </div>
       </div>
     </div>
   )

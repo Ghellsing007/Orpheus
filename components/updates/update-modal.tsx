@@ -53,47 +53,47 @@ export function UpdateModal() {
 
         <h2 className="text-2xl font-bold mb-2">Orpheus v{version}</h2>
         <p className="text-sm text-foreground-muted mb-4">
-          v{version} lista: Corrección HTTPS en analíticas, filtrado de vídeos y estabilidad en Artists/Playlists.
+          v{version}: Orpheus se transforma en una plataforma editorial con monetización AdSense, revista musical y cumplimiento legal.
         </p>
 
-        <div className="space-y-2 text-sm">
+        <div className="space-y-2 text-sm overflow-y-auto max-h-[300px] pr-2 custom-scrollbar">
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span className="font-semibold text-primary">Integración de Umami Analytics para seguimiento de uso</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span>Sistema inteligente de filtrado para vídeos de YouTube no disponibles</span>
+            <span className="font-semibold text-primary">Monetización con AdSense integrada</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
             <span className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-primary" />
-              Nuevo Initial Loader con temporizador de seguridad
+              Nueva sección: Orpheus Magazine (Reseñas y Rankings)
             </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span>Botón "Ver cola" directo desde el mini-reproductor y menús</span>
+            <span>Páginas legales obligatorias (Privacidad, Términos, DMCA)</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span>Botones de Compartir y Radio ahora funcionales en detalles</span>
+            <span>Nueva página de Contacto para soporte oficial</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span>Mejora: Carga de canciones más robusta con fallbacks automáticos</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span>Fix: Error de React Hooks al navegar en artistas y playlists</span>
+            <span>Teasers editoriales integrados en el Inicio y Búsquedas</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
             <span className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-primary" />
-              Sincronización PWA mejorada para refresco instantáneo
+              Limpieza de marca: Experiencia pura sin menciones a terceros
             </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-2 h-2 rounded-full bg-primary" />
+            <span>Sección Comunidad (Beta) para interacción social</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-2 h-2 rounded-full bg-primary" />
+            <span>Optimización PWA y Service Worker v3.4.0</span>
           </div>
         </div>
 

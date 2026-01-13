@@ -15,6 +15,8 @@ import { AdSlot } from "@/components/ui/ad-slot"
 const navItems = [
   { href: "/", icon: Home, label: "Inicio" },
   { href: "/search", icon: Search, label: "Buscar" },
+  { href: "/community", icon: Search, label: "Comunidad" }, // Icon will be changed manually later or kept for now
+  { href: "/magazine", icon: Search, label: "Revista" },
 ]
 
 const libraryItems = [
@@ -189,6 +191,16 @@ export function Sidebar() {
         </Link>
         <Link href="/help" className="block hover:text-foreground transition-colors">
           ¿Necesitas ayuda?
+        </Link>
+        <div className="flex justify-center gap-2 flex-wrap">
+          <Link href="/legal/privacy" className="hover:text-foreground underline underline-offset-2">Privacidad</Link>
+          <span className="text-foreground-subtle">•</span>
+          <Link href="/legal/terms" className="hover:text-foreground underline underline-offset-2">Términos</Link>
+          <span className="text-foreground-subtle">•</span>
+          <Link href="/legal/copyright" className="hover:text-foreground underline underline-offset-2">DMCA</Link>
+        </div>
+        <Link href="/contact" className="block hover:text-foreground transition-colors pt-1">
+          Contacto
         </Link>
         <p className="pt-2 text-[11px]">&copy; 2024 Orpheus</p>
         {appVersion && (

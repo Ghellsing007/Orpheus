@@ -1,6 +1,7 @@
 "use client"
 
 import { Search, X, TrendingUp, Trash2 } from "lucide-react"
+import Link from "next/link"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { SongCard } from "@/components/cards/song-card"
@@ -267,6 +268,21 @@ export function SearchScreen() {
                   {artists.map((artist) => (
                     <ArtistCard key={artist.id} artist={artist} />
                   ))}
+                </div>
+              </section>
+            )}
+
+            {/* Editorial Results (New) */}
+            {activeTab === "all" && debouncedQuery && (
+              <section className="bg-primary/5 border border-primary/10 rounded-2xl p-6">
+                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-primary" /> Resultados en Revista
+                </h3>
+                <div className="space-y-4">
+                  <Link href="/magazine" className="block p-4 bg-card/40 rounded-xl hover:bg-card/60 transition-all border border-transparent hover:border-primary/20">
+                    <p className="font-bold text-sm">Explora artículos sobre "{debouncedQuery}" en Orpheus Mag</p>
+                    <p className="text-xs text-foreground-muted mt-1">Nuestros redactores analizan las últimas tendencias musicales.</p>
+                  </Link>
                 </div>
               </section>
             )}

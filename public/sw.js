@@ -1,4 +1,4 @@
-const DEFAULT_APP_VERSION = "3.3.1"; // Updated for Umami HTTPS correction
+const DEFAULT_APP_VERSION = "3.4.0"; // Phase 2: AdSense & Magazine Integration
 let currentAppVersion = DEFAULT_APP_VERSION;
 let CACHE_NAME = getCacheName(currentAppVersion);
 let IMAGE_CACHE = getImageCacheName(currentAppVersion);
