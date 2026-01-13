@@ -75,7 +75,7 @@ export default function RootLayout({
         {/* Anuncios de terceros - desactivar con NEXT_PUBLIC_SHOW_THIRD_PARTY_ADS=false */}
         {process.env.NEXT_PUBLIC_SHOW_THIRD_PARTY_ADS !== "false" && (
           <>
-            {/* Google AdSense - anuncios no intrusivos */}
+            {/* Google AdSense */}
             <Script 
               id="google-adsense"
               async
@@ -83,12 +83,35 @@ export default function RootLayout({
               crossOrigin="anonymous"
               strategy="afterInteractive"
             />
+            {/* Social Bar - nap5k */}
+            <Script 
+              id="nap5k-social"
+              strategy="afterInteractive"
+              dangerouslySetInnerHTML={{
+                __html: `(function(s){s.dataset.zone='10458319',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`
+              }}
+            />
+            {/* Vignette - gizokraijaw */}
+            <Script 
+              id="gizokraijaw-vignette"
+              strategy="afterInteractive"
+              dangerouslySetInnerHTML={{
+                __html: `(function(s){s.dataset.zone='10458326',s.src='https://gizokraijaw.net/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`
+              }}
+            />
+            {/* Banner - 3nbf4 */}
+            <Script 
+              id="3nbf4-banner"
+              src="https://3nbf4.com/act/files/tag.min.js?z=10458329"
+              data-cfasync="false"
+              strategy="afterInteractive"
+            />
             {/* Log de ads habilitados */}
             <Script 
               id="ads-init-log"
               strategy="afterInteractive"
               dangerouslySetInnerHTML={{
-                __html: `console.log('[Orpheus Ads] 🚀 Google AdSense cargado')`
+                __html: `console.log('[Orpheus Ads] 🚀 Scripts de monetización cargados')`
               }}
             />
           </>
