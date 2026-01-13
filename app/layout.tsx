@@ -79,17 +79,16 @@ export default function RootLayout({
             <Script 
               id="google-adsense"
               async
-              src="https://pagead2.googlesyndiation.com/pagead/js/adsbygoogle.js?client=ca-pub-2109167817151815"
+              src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2109167817151815"
               crossOrigin="anonymous"
               strategy="afterInteractive"
-              onLoad={() => console.log('[Orpheus Ads] ✅ Google AdSense cargado')}
             />
             {/* Log de ads habilitados */}
             <Script 
               id="ads-init-log"
               strategy="afterInteractive"
               dangerouslySetInnerHTML={{
-                __html: `console.log('[Orpheus Ads] 🚀 Google AdSense habilitado')`
+                __html: `console.log('[Orpheus Ads] 🚀 Google AdSense cargado')`
               }}
             />
           </>
