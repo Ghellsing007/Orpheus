@@ -53,36 +53,43 @@ export function UpdateModal() {
 
         <h2 className="text-2xl font-bold mb-2">Orpheus v{version}</h2>
         <p className="text-sm text-foreground-muted mb-4">
-          v{version} lista: manifest y build PWA actualizados, playlists se reproducen desde la card y el banner de instalacion ahora se puede descartar.
+          v{version} lista: Filtrado de vídeos mejorado, carga resiliente de canciones, acceso directo a la cola y correcciones técnicas de estabilidad.
         </p>
 
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span>Manifest y version.json actualizados para refrescar la instalacion</span>
+            <span>Sistema inteligente de filtrado para vídeos de YouTube no disponibles</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
             <span className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4" />
-              Mejor manejo de cache para la PWA instalada
+              <Sparkles className="w-4 h-4 text-primary" />
+              Nuevo Initial Loader con temporizador de seguridad
             </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span>Optimizaciones de arranque y carga offline</span>
+            <span>Botón "Ver cola" directo desde el mini-reproductor y menús</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span>Fix: limpiar busquedas ya no se reautocompleta</span>
+            <span>Botones de Compartir y Radio ahora funcionales en detalles</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span>Fix: botones de play en playlists cargan y reproducen las pistas</span>
+            <span>Mejora: Carga de canciones más robusta con fallbacks automáticos</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span>Fix: el banner de instalacion PWA se oculta al cerrarlo</span>
+            <span>Fix: Error de React Hooks al navegar en artistas y playlists</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-2 h-2 rounded-full bg-primary" />
+            <span className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-primary" />
+              Sincronización PWA mejorada para refresco instantáneo
+            </span>
           </div>
         </div>
 
