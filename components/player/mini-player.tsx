@@ -41,7 +41,6 @@ export function MiniPlayer() {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const [menuPos, setMenuPos] = useState<{ top: number; left: number; origin: "top" | "bottom" } | null>(null)
-  const bgHintShownRef = useRef(false)
 
   if (!currentSong) return null
 
@@ -60,60 +59,32 @@ export function MiniPlayer() {
     navigator.vibrate(15)
   }
 
-
   const artistSlug = currentSong.channelId || currentSong.artist
   const artistHref = artistSlug ? `/artist/${encodeURIComponent(artistSlug)}` : null
 
-  // Media Session metadata/control integration
-  useLayoutEffect(() => {
-    if (!("mediaSession" in navigator) || !currentSong) return
+  // Media Session metadata - Confiamos en el comportamiento estándar del navegador
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !("mediaSession" in navigator) || !currentSong) return
+
     try {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: currentSong.title,
         artist: currentSong.artist,
         artwork: [
           { src: currentSong.thumbnail || "", sizes: "96x96", type: "image/png" },
-          { src: currentSong.thumbnailHigh || currentSong.thumbnail || "", sizes: "256x256", type: "image/png" },
-          { src: currentSong.thumbnailHigh || currentSong.thumbnail || "", sizes: "512x512", type: "image/png" },
-        ].filter((a) => a.src),
+          { src: currentSong.thumbnail || "", sizes: "192x192", type: "image/png" },
+          { src: currentSong.thumbnail || "", sizes: "512x512", type: "image/png" },
+        ],
       })
 
-      // Actualizar el estado de reproducción para que el SO muestre los botones correctos
-      navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused"
-
-      // Sincronizar la barra de progreso con el sistema operativo
-      if ("setPositionState" in navigator.mediaSession) {
-        navigator.mediaSession.setPositionState({
-          duration: duration || 0,
-          playbackRate: 1,
-          position: currentTime || 0,
-        })
-      }
-
-      navigator.mediaSession.setActionHandler("play", () => togglePlay())
-      navigator.mediaSession.setActionHandler("pause", () => togglePlay())
-      navigator.mediaSession.setActionHandler("previoustrack", () => playPrevious())
-      navigator.mediaSession.setActionHandler("nexttrack", () => playNext())
-      navigator.mediaSession.setActionHandler("stop", () => {
-        if (isPlaying) togglePlay()
-      })
-      navigator.mediaSession.setActionHandler("seekbackward", (details: any) => {
-        const delta = typeof details?.seekOffset === "number" ? details.seekOffset : 7
-        seek(Math.max(0, currentTime - delta))
-      })
-      navigator.mediaSession.setActionHandler("seekforward", (details: any) => {
-        const delta = typeof details?.seekOffset === "number" ? details.seekOffset : 7
-        seek(Math.min(duration, currentTime + delta))
-      })
-      navigator.mediaSession.setActionHandler("seekto", (details: any) => {
-        if (typeof details?.seekTime === "number") {
-          seek(details.seekTime)
-        }
-      })
+      navigator.mediaSession.setActionHandler("play", togglePlay)
+      navigator.mediaSession.setActionHandler("pause", togglePlay)
+      navigator.mediaSession.setActionHandler("previoustrack", playPrevious)
+      navigator.mediaSession.setActionHandler("nexttrack", playNext)
     } catch (_) {
       /* noop */
     }
-  }, [currentSong, isPlaying, currentTime, duration, togglePlay, playPrevious, playNext, seek])
+  }, [currentSong, togglePlay, playPrevious, playNext])
 
   // Escucha acciones provenientes de notificaciones (enviadas por el service worker)
   useEffect(() => {
@@ -123,16 +94,6 @@ export function MiniPlayer() {
       if (data.action === "play" || data.action === "pause" || data.action === "playpause") togglePlay()
       if (data.action === "next" || data.action === "nexttrack") playNext()
       if (data.action === "prev" || data.action === "previoustrack") playPrevious()
-      if (data.action === "seekto" && typeof data.seekTime === "number") seek(data.seekTime)
-      if (data.action === "stop") {
-        if (isPlaying) togglePlay()
-      }
-      if (data.action === "seekforward" && typeof data.seekOffset === "number") {
-        seek(Math.min(duration, currentTime + data.seekOffset))
-      }
-      if (data.action === "seekbackward" && typeof data.seekOffset === "number") {
-        seek(Math.max(0, currentTime - data.seekOffset))
-      }
     }
     if (typeof navigator !== "undefined" && navigator.serviceWorker) {
       navigator.serviceWorker.addEventListener("message", handler)
@@ -142,12 +103,9 @@ export function MiniPlayer() {
         navigator.serviceWorker.removeEventListener("message", handler)
       }
     }
-  }, [togglePlay, playNext, playPrevious, seek])
+  }, [togglePlay, playNext, playPrevious])
 
-  // Simplificación: Confiamos 100% en Media Session API nativa para el segundo plano
-  // Se elimina la notificación personalizada que causaba conflictos en Android/iOS
-
-  // Posiciona el menú para que no quede fuera de la pantalla (especialmente en el mini player).
+  // Posiciona el menú para que no quede fuera de la pantalla
   useLayoutEffect(() => {
     if (!menuOpen) return
     const btn = menuButtonRef.current
@@ -222,152 +180,143 @@ export function MiniPlayer() {
               <button
                 onClick={() => {
                   vibrateLight()
-                  playPrevious()
+                  toggleShuffle()
                 }}
-                className="w-10 h-10 items-center justify-center text-foreground-muted hover:text-foreground transition-colors flex"
-                onMouseDown={() => navigator.vibrate?.(10)}
+                className={cn(
+                  "hidden sm:flex w-10 h-10 items-center justify-center rounded-full transition-colors",
+                  shuffle ? "text-primary" : "text-foreground-muted hover:text-foreground",
+                )}
               >
-                <SkipBack className="w-5 h-5" />
+                <Shuffle className="w-5 h-5" />
               </button>
 
               <button
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation()
+                  vibrateLight()
+                  playPrevious()
+                }}
+                className="w-10 h-10 flex items-center justify-center text-foreground hover:text-primary transition-colors"
+              >
+                <SkipBack className="w-6 h-6 fill-current" />
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
                   vibrateLight()
                   togglePlay()
                 }}
-                className="w-12 h-12 md:w-14 md:h-14 rounded-full gradient-primary flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shadow-lg shadow-primary/25"
-                onMouseDown={() => navigator.vibrate?.(10)}
+                className="w-12 h-12 flex items-center justify-center bg-primary text-white rounded-full hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20"
               >
-                {isPlaying ? (
-                  <Pause className="w-6 h-6 text-primary-foreground" fill="currentColor" />
-                ) : (
-                  <Play className="w-6 h-6 text-primary-foreground ml-1" fill="currentColor" />
-                )}
+                {isPlaying ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current ml-1" />}
               </button>
 
               <button
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation()
                   vibrateLight()
                   playNext()
                 }}
-                className="w-10 h-10 items-center justify-center text-foreground-muted hover:text-foreground transition-colors flex"
-                onMouseDown={() => navigator.vibrate?.(10)}
+                className="w-10 h-10 flex items-center justify-center text-foreground hover:text-primary transition-colors"
               >
-                <SkipForward className="w-5 h-5" />
+                <SkipForward className="w-6 h-6 fill-current" />
               </button>
-            </div>
 
-            {/* Menu */}
-            <div className="relative">
               <button
                 ref={menuButtonRef}
                 onClick={(e) => {
                   e.stopPropagation()
-                  setMenuOpen((v) => !v)
+                  setMenuOpen(!menuOpen)
                 }}
                 className="w-10 h-10 flex items-center justify-center text-foreground-muted hover:text-foreground transition-colors"
               >
                 <MoreVertical className="w-5 h-5" />
               </button>
-              {menuOpen &&
-                createPortal(
-                  <>
-                    <div
-                      className="fixed inset-0 z-[1400]"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setMenuOpen(false)
-                      }}
-                    />
-                    {menuPos && (
-                      <div
-                        className={cn(
-                          "fixed z-[1500] w-56 bg-card border border-border rounded-xl shadow-xl py-2",
-                          menuPos.origin === "bottom" ? "origin-bottom" : "origin-top",
-                        )}
-                        style={{ top: menuPos.top, left: menuPos.left }}
-                      >
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleLike()
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
-                        >
-                          <Heart className={cn("w-4 h-4", isLiked && "fill-current text-primary")} />
-                          {isLiked ? "Quitar de favoritos" : "Agregar a favoritos"}
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            toggleShuffle()
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
-                        >
-                          <Shuffle className={cn("w-4 h-4", shuffle && "text-primary")} />
-                          {shuffle ? "Quitar aleatorio" : "Aleatorio"}
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            cycleRepeat()
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
-                        >
-                          <Repeat className={cn("w-4 h-4", repeat !== "off" && "text-primary")} />
-                          {repeat === "one" ? "Repetir pista" : repeat === "all" ? "Repetir todo" : "Repetir"}
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setShowQueueOnly(true)
-                            setShowNowPlaying(true)
-                            setMenuOpen(false)
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
-                        >
-                          <ListMusic className="w-4 h-4" />
-                          Ver cola
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            shareContent({
-                              title: currentSong.title,
-                              text: `Escucha "${currentSong.title}" de ${currentSong.artist} en Orpheus`,
-                              url: `/song/${currentSong.ytid || currentSong.id}`
-                            })
-                            setMenuOpen(false)
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
-                        >
-                          <Share2 className="w-4 h-4" />
-                          Compartir
-                        </button>
-                      </div>
-                    )}
-                  </>,
-                  document.body,
-                )}
-            </div>
-
-            {/* Duration - Desktop only */}
-            <div className="hidden md:flex items-center gap-2 text-sm text-foreground-muted min-w-[100px] justify-end">
-              <span>{formatDuration(currentTime)}</span>
-              <span>/</span>
-              <span>{formatDuration(duration)}</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Now Playing Sheet */}
-      <NowPlayingSheet
-        open={showNowPlaying}
-        onClose={() => setShowNowPlaying(false)}
-        initialTab={showQueueOnly ? "queue" : "playing"}
-      />
+      {/* Menu Portal */}
+      {menuOpen &&
+        menuPos &&
+        createPortal(
+          <div className="fixed inset-0 z-[100]" onClick={() => setMenuOpen(false)}>
+            <div
+              className={cn(
+                "absolute w-[240px] bg-card/95 backdrop-blur-xl border border-border shadow-2xl rounded-2xl p-2 py-3 animate-in fade-in zoom-in duration-200",
+                menuPos.origin === "top" ? "origin-top" : "origin-bottom",
+              )}
+              style={{
+                top: menuPos.top,
+                left: menuPos.left,
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-3 py-2 mb-2 border-b border-border/50">
+                <p className="font-semibold text-sm truncate">{currentSong.title}</p>
+                <p className="text-xs text-foreground-muted truncate">{currentSong.artist}</p>
+              </div>
 
+              <div className="space-y-1">
+                <button
+                  onClick={handleLike}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/10 transition-colors text-sm"
+                >
+                  <Heart className={cn("w-4 h-4", isLiked ? "fill-primary text-primary" : "text-foreground-muted")} />
+                  {isLiked ? "Quitar de favoritos" : "Añadir a favoritos"}
+                </button>
+
+                <button
+                  onClick={() => {
+                    shareContent(currentSong)
+                    setMenuOpen(false)
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/10 transition-colors text-sm"
+                >
+                  <Share2 className="w-4 h-4 text-foreground-muted" />
+                  Compartir canción
+                </button>
+
+                <button
+                  onClick={() => {
+                    vibrateLight()
+                    cycleRepeat()
+                    setMenuOpen(false)
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/10 transition-colors text-sm"
+                >
+                  <Repeat className={cn("w-4 h-4", repeat !== "off" ? "text-primary" : "text-foreground-muted")} />
+                  Modo: {repeat === "off" ? "Apagado" : repeat === "one" ? "Repetir una" : "Repetir todas"}
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowQueueOnly(true)
+                    setShowNowPlaying(true)
+                    setMenuOpen(false)
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/10 transition-colors text-sm"
+                >
+                  <ListMusic className="w-4 h-4 text-foreground-muted" />
+                  Ver cola
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
+
+      {showNowPlaying && (
+        <NowPlayingSheet
+          initialTab={showQueueOnly ? "queue" : "playing"}
+          onClose={() => {
+            setShowNowPlaying(false)
+            setShowQueueOnly(false)
+          }}
+        />
+      )}
     </>
   )
 }

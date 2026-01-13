@@ -16,7 +16,7 @@ if (urlParams.get('blockAds') !== 'true') {
 // ============================================
 
 // La versión se carga dinámicamente de /version.json
-let currentAppVersion = "3.8.0"; // Se actualiza al instalar/activar
+const currentAppVersion = "3.8.4"; // Se actualiza al instalar/activar
 let CACHE_NAME = getCacheName(currentAppVersion);
 let IMAGE_CACHE = getImageCacheName(currentAppVersion);
 const OFFLINE_URL = "/offline.html";

@@ -8,7 +8,6 @@ import { QueueProvider } from "@/contexts/queue-context"
 import { SettingsProvider } from "@/contexts/settings-context"
 import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register"
 
-import { SilentAudio } from "@/components/player/silent-audio"
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -31,7 +30,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <PlayerProvider>
           <QueueProvider>
             {children}
-            <SilentAudio />
             <ServiceWorkerRegister />
           </QueueProvider>
         </PlayerProvider>

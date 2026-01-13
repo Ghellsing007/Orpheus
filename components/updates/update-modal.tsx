@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { X, Sparkles, ShieldCheck } from "lucide-react"
+import { X, Sparkles, ShieldCheck, Heart, Zap, Globe } from "lucide-react"
 
 export function UpdateModal() {
   const [version, setVersion] = useState<string | null>(null)
@@ -34,14 +34,21 @@ export function UpdateModal() {
 
   if (!open || !version) return null
 
+  const changes = [
+    { icon: ShieldCheck, text: "Bloqueador de anuncios más potente y efectivo" },
+    { icon: Zap, text: "Tus temas y colores favoritos se cargan al instante" },
+    { icon: Heart, text: "Música ininterrumpida, incluso con la app en segundo plano" },
+    { icon: Globe, text: "Mejoras de navegación y soporte completo de idiomas (ES/EN)" },
+  ]
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={closeModal} />
-      <div className="relative w-full max-w-md rounded-2xl bg-gradient-to-br from-card to-background border border-border shadow-2xl p-6 animate-in fade-in slide-in-from-bottom-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2 text-primary">
-            <Sparkles className="w-5 h-5" />
-            <span className="text-sm font-semibold">Actualizacion disponible</span>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={closeModal} />
+      <div className="relative w-full max-w-md rounded-3xl bg-gradient-to-br from-card to-background border border-primary/20 shadow-2xl p-8 animate-in fade-in zoom-in duration-300">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary">
+            <Sparkles className="w-4 h-4" />
+            <span className="text-xs font-bold uppercase tracking-wider">Nueva Versión</span>
           </div>
           <button
             onClick={closeModal}
@@ -51,53 +58,32 @@ export function UpdateModal() {
           </button>
         </div>
 
-        <h2 className="text-2xl font-bold mb-2">Orpheus v{version}</h2>
-        <p className="text-sm text-foreground-muted mb-4">
-          v{version}: Orpheus ahora es global con soporte multidioma real y mejoras en la transparencia de la publicidad externa.
-        </p>
-
-        <div className="space-y-2 text-sm overflow-y-auto max-h-[300px] pr-2 custom-scrollbar">
-          <div className="flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span className="font-semibold text-primary">Soporte Multidioma (i18n)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span>Intercambia entre Español e Inglés instantáneamente desde Ajustes</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span className="flex items-center gap-2 font-semibold">
-              <ShieldCheck className="w-4 h-4 text-primary" />
-              Gestión Transparente de Anuncios
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span>Nuevo modal de confirmación y banner informativo sobre anuncios externos</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span className="font-semibold text-primary">Reproducción Life Support</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span>Soporte mejorado para segundo plano y Media Session API</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span>Optimizaciones de rendimiento y corrección del Service Worker v3.8.0</span>
-          </div>
+        <div className="mb-6">
+          <h2 className="text-3xl font-black mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent italic">
+            Orpheus v{version}
+          </h2>
+          <p className="text-sm text-foreground-muted leading-relaxed">
+            Hemos reconstruido las bases para ofrecerte una experiencia más rápida, privada y estable.
+          </p>
         </div>
 
-        <div className="mt-6 flex justify-end">
-          <button
-            onClick={closeModal}
-            className="px-4 py-2 rounded-full bg-primary text-primary-foreground font-semibold hover:opacity-90 active:scale-95 transition-transform"
-          >
-            Entendido
-          </button>
+        <div className="space-y-4 mb-8">
+          {changes.map((change, index) => (
+            <div key={index} className="flex items-start gap-3 p-3 rounded-2xl bg-card/50 border border-border/50 hover:border-primary/30 transition-colors">
+              <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <change.icon className="w-4 h-4 text-primary" />
+              </div>
+              <span className="text-sm font-medium leading-snug">{change.text}</span>
+            </div>
+          ))}
         </div>
+
+        <button
+          onClick={closeModal}
+          className="w-full py-4 rounded-2xl bg-primary text-white font-bold hover:brightness-110 active:scale-[0.98] transition-all shadow-lg shadow-primary/20"
+        >
+          ¡Vamos allá!
+        </button>
       </div>
     </div>
   )
