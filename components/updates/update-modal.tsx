@@ -53,7 +53,7 @@ export function UpdateModal() {
 
         <h2 className="text-2xl font-bold mb-2">Orpheus v{version}</h2>
         <p className="text-sm text-foreground-muted mb-4">
-          v{version} lista: Integración de Umami Analytics, filtrado de vídeos mejorado y correcciones de estabilidad en Artists/Playlists.
+          v{version} lista: Corrección HTTPS en analíticas, filtrado de vídeos y estabilidad en Artists/Playlists.
         </p>
 
         <div className="space-y-2 text-sm">
