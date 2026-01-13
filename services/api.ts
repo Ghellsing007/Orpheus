@@ -86,7 +86,7 @@ class ApiService {
       highResImage: input.highResImage,
       isLive: input.isLive,
       channelId: (input as any).channelId || (input as any).artistId,
-      source: "youtube",
+      source: "orpheus",
     }
   }
 
@@ -100,7 +100,7 @@ class ApiService {
       thumbnail: input.image || songs?.[0]?.thumbnail || "",
       image: input.image,
       songCount: songs?.length ?? 0,
-      source: input.source === "user-created" ? "custom" : "youtube",
+      source: input.source === "user-created" ? "custom" : "orpheus",
       songs,
       list: songs,
       isAlbum: input.isAlbum,
@@ -114,7 +114,7 @@ class ApiService {
         id: pl.ytid || pl.id,
         title: pl.title,
         image: pl.image,
-        source: "youtube",
+        source: "orpheus",
         list: pl.list,
         isAlbum: pl.isAlbum,
       }),
@@ -277,7 +277,7 @@ class ApiService {
       recentlyPlayed: ApiSong[]
       customPlaylists: ApiPlaylist[]
       playlistFolders: any[]
-      youtubePlaylists: string[]
+      youtubePlaylists: string[] // Keep key for API compatibility
     }>(`/users/${userId}/state`)
 
     return {

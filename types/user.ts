@@ -4,6 +4,6 @@ export type UserProfile = {
   username?: string | null
   email?: string | null
   avatarUrl?: string | null
-  role?: "guest" | "user" | "admin" | string
+  role?: "guest" | "user" | "premium" | "admin" | string
   phone?: string | null
 }

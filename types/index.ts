@@ -14,7 +14,7 @@ export interface Song {
   highResImage?: string
   isLive?: boolean
   channelId?: string
-  source: "youtube" | "local"
+  source: "orpheus" | "youtube" | "local"
   streamUrl?: string
 }
 
@@ -26,7 +26,7 @@ export interface Playlist {
   thumbnail: string
   image?: string
   songCount: number
-  source: "youtube" | "user" | "custom"
+  source: "orpheus" | "youtube" | "user" | "custom"
   songs?: Song[]
   createdAt?: string
   updatedAt?: string
@@ -120,7 +120,7 @@ export interface UserState {
   importedPlaylists: Playlist[]
 }
 
-export type UserRole = "guest" | "user" | "admin"
+export type UserRole = "guest" | "user" | "premium" | "admin" | string
 
 // =============== SETTINGS ===============
 
@@ -174,7 +174,7 @@ export interface HomePreview {
   mood?: string
   banner?: string
   subscribers?: number
-  source?: "youtube" | "custom" | "curated-fallback"
+  source?: "orpheus" | "youtube" | "custom" | "curated-fallback"
 }
 
 // =============== API TYPES ===============

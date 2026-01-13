@@ -10,7 +10,7 @@ import {
   Check,
   Volume2,
   Zap,
-  Download,
+  Save,
   Upload,
   Trash2,
   RefreshCw,
@@ -274,7 +274,7 @@ export function SettingsScreen() {
           className="w-full flex items-center justify-between px-4 py-4 rounded-xl bg-card hover:bg-card-hover transition-colors"
         >
           <div className="flex items-center gap-3">
-            <Download className="w-5 h-5 text-foreground-muted" />
+            <Save className="w-5 h-5 text-foreground-muted" />
             <span>Exportar datos</span>
           </div>
           <ChevronRight className="w-5 h-5 text-foreground-muted" />

@@ -160,7 +160,7 @@ export function NowPlayingSheet({ open, onClose, initialTab = "playing" }: NowPl
                   />
                   <div className="absolute inset-0 bg-gradient-to-br from-background/80 via-background/50 to-background/80" />
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center px-4">
-                    <p className="text-sm text-foreground-muted">El video de YouTube se centra aqui al desplegar.</p>
+                    <p className="text-sm text-foreground-muted">El video se centra aquí al desplegar.</p>
                     <p className="text-xs text-foreground-subtle">
                       Al minimizar se mueve como vista flotante sin pausar la reproduccion.
                     </p>

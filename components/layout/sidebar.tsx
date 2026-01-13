@@ -10,6 +10,7 @@ import { OrpheusLogo } from "@/components/ui/orpheus-logo"
 import { AuthModal } from "@/components/auth/auth-modal"
 import { AvatarInitials } from "@/components/ui/avatar-initials"
 import { CreatePlaylistModal } from "@/components/playlists/create-playlist-modal"
+import { AdSlot } from "@/components/ui/ad-slot"
 
 const navItems = [
   { href: "/", icon: Home, label: "Inicio" },
@@ -137,6 +138,9 @@ export function Sidebar() {
           <Settings className="w-5 h-5" />
           <span className="text-sm font-medium">Ajustes</span>
         </Link>
+        <div className="px-4 mt-2">
+          <AdSlot type="sidebar" className="h-32" />
+        </div>
       </nav>
 
       {/* CTA */}

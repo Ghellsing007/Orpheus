@@ -11,7 +11,6 @@ import {
   Shuffle,
   Repeat,
   ListMusic,
-  Download,
   Share2,
 } from "lucide-react"
 import Link from "next/link"
@@ -42,9 +41,6 @@ export function MiniPlayer() {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const [menuPos, setMenuPos] = useState<{ top: number; left: number; origin: "top" | "bottom" } | null>(null)
-  const [downloading, setDownloading] = useState(false)
-  const [downloadError, setDownloadError] = useState<string | null>(null)
-  const [showDownloadModal, setShowDownloadModal] = useState(false)
   const bgHintShownRef = useRef(false)
 
   if (!currentSong) return null
@@ -64,48 +60,6 @@ export function MiniPlayer() {
     navigator.vibrate(15)
   }
 
-  const handleDownload = async () => {
-    if (!currentSong) return
-    setDownloading(true)
-    setDownloadError(null)
-    try {
-      const id = encodeURIComponent(currentSong.ytid || currentSong.id)
-      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || window.location.origin).replace(/\/$/, "")
-      const target = `${baseUrl}/download/mp3/${id}`
-
-      const res = await fetch(target)
-      if (!res.ok) {
-        let backendError = ""
-        try {
-          const data = await res.json()
-          backendError = data?.error || ""
-        } catch (_) {}
-        const friendly =
-          backendError && res.status === 404
-            ? "Este video no está disponible para descargar."
-            : "No se pudo descargar esta pista."
-        throw new Error(friendly)
-      }
-      const blob = await res.blob()
-      const disposition = res.headers.get("content-disposition") || ""
-      const match = /filename\*=UTF-8''([^;]+)|filename=\"?([^\";]+)\"?/i.exec(disposition || "")
-      const filename = decodeURIComponent(match?.[1] || match?.[2] || `${currentSong.artist || "audio"} - ${currentSong.title || "track"}.mp3`)
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = filename
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      window.URL.revokeObjectURL(url)
-      setShowDownloadModal(false)
-    } catch (err) {
-      console.error(err)
-      setDownloadError(err instanceof Error ? err.message : "No se pudo generar la descarga")
-    } finally {
-      setDownloading(false)
-    }
-  }
 
   const artistSlug = currentSong.channelId || currentSong.artist
   const artistHref = artistSlug ? `/artist/${encodeURIComponent(artistSlug)}` : null
@@ -403,18 +357,6 @@ export function MiniPlayer() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
-                            setShowDownloadModal(true)
-                            setMenuOpen(false)
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
-                          disabled={downloading}
-                        >
-                          <Download className="w-4 h-4" />
-                          {downloading ? "Preparando..." : "Descargar"}
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
                             shareContent({
                               title: currentSong.title,
                               text: `Escucha "${currentSong.title}" de ${currentSong.artist} en Orpheus`,
@@ -451,67 +393,6 @@ export function MiniPlayer() {
         initialTab={showQueueOnly ? "queue" : "playing"}
       />
 
-      {/* Download Modal */}
-      {showDownloadModal && currentSong && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="bg-card rounded-2xl shadow-2xl w-full max-w-md p-6 relative">
-            <button
-              onClick={() => {
-                setShowDownloadModal(false)
-                setDownloadError(null)
-              }}
-              className="absolute right-3 top-3 text-foreground-muted hover:text-foreground"
-            >
-              ✕
-            </button>
-            <div className="flex items-center gap-4">
-              <img
-                src={currentSong.thumbnail || "/placeholder.svg"}
-                alt={currentSong.title}
-                className="w-20 h-20 rounded-lg object-cover"
-              />
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold truncate">{currentSong.title}</p>
-                {artistHref ? (
-                  <Link
-                    href={artistHref}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                    }}
-                    className="text-sm text-foreground-muted truncate hover:text-primary transition-colors"
-                  >
-                    {currentSong.artist}
-                  </Link>
-                ) : (
-                  <p className="text-sm text-foreground-muted truncate">{currentSong.artist}</p>
-                )}
-                <p className="text-xs text-foreground-muted mt-1">
-                  {formatDuration(currentSong.duration)} • Audio MP3
-                </p>
-              </div>
-            </div>
-            {downloadError && <p className="text-destructive text-sm mt-3">{downloadError}</p>}
-            <div className="mt-6 flex gap-3 justify-end">
-              <button
-                onClick={() => {
-                  setShowDownloadModal(false)
-                  setDownloadError(null)
-                }}
-                className="px-4 py-2 rounded-full bg-card-hover text-sm"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleDownload}
-                disabled={downloading}
-                className="px-4 py-2 rounded-full gradient-primary text-white text-sm font-semibold disabled:opacity-60"
-              >
-                {downloading ? "Preparando..." : "Descargar"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   )
 }

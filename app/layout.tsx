@@ -9,8 +9,8 @@ import { UpdateModal } from "@/components/updates/update-modal"
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
 export const metadata: Metadata = {
-  title: "Orpheus - Music Streaming",
-  description: "Music Unbound - Descubre y disfruta millones de canciones con Orpheus",
+  title: "Orpheus - Disfruta tu música",
+  description: "Orpheus es una plataforma web que permite descubrir y escuchar música en una interfaz moderna tipo streaming. Los usuarios pueden explorar artistas, tendencias y géneros, crear listas de reproducción y disfrutar de una experiencia optimizada para música.",
   applicationName: "Orpheus",
   manifest: "/manifest.json",
   formatDetection: {
@@ -56,6 +56,11 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="application-name" content="Orpheus" />
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2109167817151815"
+          crossOrigin="anonymous"
+        ></script>
         <script defer src="https://umami.gvslabs.cloud/script.js" data-website-id="85302052-7bec-42b5-8aed-e2a8d0f5c232"></script>
       </head>
       <body className={`${inter.className} font-sans antialiased`}>

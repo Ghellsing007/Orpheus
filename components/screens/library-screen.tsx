@@ -3,7 +3,7 @@
 import type React from "react"
 import { useMemo, useState, useEffect, useCallback } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { Plus, Grid3X3, List, Heart, Clock, Music, User, FolderOpen, Download } from "lucide-react"
+import { Plus, Grid3X3, List, Heart, Clock, Music, User, FolderOpen } from "lucide-react"
 import { SongCard } from "@/components/cards/song-card"
 import { PlaylistCard } from "@/components/cards/playlist-card"
 import { ArtistCard } from "@/components/cards/artist-card"
@@ -19,6 +19,10 @@ import type { Playlist, Song, Artist } from "@/types"
 type Filter = "all" | "playlists" | "songs" | "artists"
 type ViewMode = "grid" | "list"
 
+interface LibraryScreenProps {
+  initialFilter?: Filter
+}
+
 const filters: { id: Filter; label: string; icon: React.ElementType }[] = [
   { id: "all", label: "Todo", icon: FolderOpen },
   { id: "playlists", label: "Playlists", icon: Music },
@@ -26,8 +30,8 @@ const filters: { id: Filter; label: string; icon: React.ElementType }[] = [
   { id: "artists", label: "Artistas", icon: User },
 ]
 
-export function LibraryScreen() {
-  const [activeFilter, setActiveFilter] = useState<Filter>("all")
+export function LibraryScreen({ initialFilter = "all" }: LibraryScreenProps) {
+  const [activeFilter, setActiveFilter] = useState<Filter>(initialFilter)
   const [viewMode, setViewMode] = useState<ViewMode>("grid")
   const [hydrated, setHydrated] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
@@ -307,7 +311,7 @@ export function LibraryScreen() {
         {(activeFilter === "all" || activeFilter === "playlists") && savedPlaylists.length > 0 && (
           <section>
             <div className="flex items-center gap-2 mb-4">
-              <Download className="w-5 h-5 text-foreground-muted" />
+               <FolderOpen className="w-5 h-5 text-foreground-muted" />
               <h2 className="text-lg font-bold">Playlists guardadas</h2>
             </div>
             {viewMode === "grid" ? (
@@ -336,7 +340,7 @@ export function LibraryScreen() {
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{playlist.title}</p>
                       <p className="text-sm text-foreground-muted truncate">
-                        {playlist.source === "custom" ? "User" : "YouTube"} - {playlist.songCount} canciones
+                        {playlist.source === "custom" ? "User" : "Explorar"} - {playlist.songCount} canciones
                       </p>
                     </div>
                   </div>

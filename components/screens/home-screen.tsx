@@ -9,6 +9,7 @@ import { PlaylistCard } from "@/components/cards/playlist-card"
 import { SongCard } from "@/components/cards/song-card"
 import { ArtistCard } from "@/components/cards/artist-card"
 import { SkeletonCarousel, SkeletonHero } from "@/components/ui/skeleton-card"
+import { AdSlot } from "@/components/ui/ad-slot"
 import { useQueue } from "@/contexts/queue-context"
 import { api } from "@/services/api"
 import type { Artist, Playlist, Song, HomePreview, HomeSection, HomeSectionType, SongPreview } from "@/types"
@@ -248,6 +249,11 @@ export function HomeScreen() {
           </CarouselSection>
         )}
 
+        {/* Ad Slot #1 */}
+        <div className="px-4">
+          <AdSlot type="banner" />
+        </div>
+
         {/* Artists */}
         {fallbackArtists.length > 0 && (
           <CarouselSection title="Artistas populares" subtitle="Descubre nuevos talentos">
@@ -313,6 +319,11 @@ export function HomeScreen() {
             ))}
           </CarouselSection>
         )}
+
+        {/* Ad Slot #2 */}
+        <div className="px-4">
+          <AdSlot type="banner" className="opacity-80" />
+        </div>
 
         {/* Mood Playlists */}
         {moodPlaylists.length > 0 && (
@@ -404,7 +415,7 @@ function previewToSong(preview?: HomePreview | SongPreview): Song | null {
     lowResImage: preview.thumbnail,
     highResImage: preview.image,
     isLive: preview.isLive,
-    source: "youtube",
+    source: "orpheus",
   }
 }
 
