@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Heart } from "lucide-react"
 import Link from "next/link"
 import type { Artist } from "@/types"
@@ -12,13 +13,20 @@ interface ArtistCardProps {
 }
 
 export function ArtistCard({ artist, isLiked = false, onToggleLike }: ArtistCardProps) {
+  const [imgSrc, setImgSrc] = useState(artist.image || "/placeholder.svg?height=200&width=200&query=artist portrait")
   const artistSlug = artist.ytid || artist.id
+  
+  const handleImageError = () => {
+    setImgSrc("/placeholder.svg?height=200&width=200&query=music artist")
+  }
+
   const content = (
     <>
-      <div className="relative aspect-square rounded-full overflow-hidden mb-3 shadow-lg shadow-black/20 mx-auto">
+      <div className="relative aspect-square rounded-full overflow-hidden mb-3 shadow-lg shadow-black/20 mx-auto bg-card-hover flex items-center justify-center">
         <img
-          src={artist.image || "/placeholder.svg?height=200&width=200&query=artist portrait"}
+          src={imgSrc}
           alt={artist.name}
+          onError={handleImageError}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />

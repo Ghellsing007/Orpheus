@@ -10,6 +10,7 @@ import { formatDuration, cn } from "@/lib/utils"
 import type { Playlist } from "@/types"
 import { api } from "@/services/api"
 import { useSettings } from "@/contexts/settings-context"
+import { useVideoAvailability } from "@/hooks/use-video-availability"
 
 interface PlaylistDetailScreenProps {
   playlistId: string
@@ -35,6 +36,9 @@ export function PlaylistDetailScreen({ playlistId }: PlaylistDetailScreenProps) 
   const isLoading = playlistQuery.isPending && !playlist
   const error = playlistQuery.isError ? "No pudimos cargar la playlist" : null
 
+  const rawSongs = playlist?.songs || playlist?.list || []
+  const { filteredSongs: songs } = useVideoAvailability(rawSongs, "progressive", 20)
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -55,7 +59,7 @@ export function PlaylistDetailScreen({ playlistId }: PlaylistDetailScreenProps) 
     )
   }
 
-  const songs = playlist.songs || playlist.list || []
+  
   const totalDuration = songs.reduce((acc, song) => acc + song.duration, 0)
   const toggleLike = () => {
     const next = !isLiked
@@ -160,7 +164,7 @@ export function PlaylistDetailScreen({ playlistId }: PlaylistDetailScreenProps) 
             ))
           ) : (
             <div className="text-center py-12 text-foreground-muted">
-              <p>Esta playlist está vacía</p>
+              <p>Esta playlist está vacía o cargando...</p>
             </div>
           )}
         </div>

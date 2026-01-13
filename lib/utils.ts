@@ -21,3 +21,32 @@ export function formatNumber(num: number): string {
   }
   return num.toString()
 }
+
+export async function shareContent(params: {
+  title: string
+  text?: string
+  url: string
+  onSuccess?: () => void
+  onError?: (err: any) => void
+}) {
+  const { title, text, url, onSuccess, onError } = params
+  const fullUrl = url.startsWith("http") ? url : `${window.location.origin}${url}`
+
+  if (typeof navigator !== "undefined" && navigator.share) {
+    try {
+      await navigator.share({ title, text, url: fullUrl })
+      onSuccess?.()
+    } catch (err) {
+      if ((err as Error).name !== "AbortError") {
+        onError?.(err)
+      }
+    }
+  } else {
+    try {
+      await navigator.clipboard.writeText(fullUrl)
+      onSuccess?.()
+    } catch (err) {
+      onError?.(err)
+    }
+  }
+}

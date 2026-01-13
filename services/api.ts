@@ -172,8 +172,24 @@ class ApiService {
 
   // Songs
   async getSong(id: string): Promise<Song> {
-    const data = await this.fetchJson<ApiSong>(`/songs/${id}`)
+    const data = await this.fetchJson<ApiSong>(`/songs/${encodeURIComponent(id)}`)
     return this.mapSong(data)
+  }
+
+  async loadSongResilient(id: string): Promise<Song> {
+    try {
+      return await this.getSong(id)
+    } catch (e) {
+      console.warn(`getSong failed for ${id}, trying fallback...`)
+      const songs = await this.getSongsByIds([id])
+      if (songs.length > 0) return songs[0]
+
+      const searchResults = await this.searchSongs(id)
+      const found = searchResults.find(s => s.ytid === id || s.id === id)
+      if (found) return found
+
+      throw e
+    }
   }
 
   async getSongsByIds(ids: string[]): Promise<Song[]> {

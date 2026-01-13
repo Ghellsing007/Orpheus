@@ -15,6 +15,7 @@ import type { Artist, Playlist, Song, HomePreview, HomeSection, HomeSectionType,
 import { useSettings } from "@/contexts/settings-context"
 import { getRecentlyPlayed } from "@/lib/storage"
 import { AuthModal } from "@/components/auth/auth-modal"
+import { useVideoAvailability } from "@/hooks/use-video-availability"
 
 type CuratedResolvedPayload = {
   trendingSongs?: (HomePreview | SongPreview)[]
@@ -27,6 +28,7 @@ export function HomeScreen() {
   const [authOpen, setAuthOpen] = useState(false)
   const { setQueue } = useQueue()
   const { userId } = useSettings()
+  
   const curatedQuery = useQuery({
     queryKey: ["home", "curated"],
     queryFn: () => api.getCuratedHome(),
@@ -62,6 +64,8 @@ export function HomeScreen() {
     return buildSongsFromSection(curatedSections, curatedPreviews, "trendingSongs")
   }, [curatedSections, curatedPreviews, resolved])
 
+  const { filteredSongs: filteredTrending } = useVideoAvailability(trending, "progressive", 8)
+
   const playlists = useMemo(() => {
     const fromResolved =
       (resolved?.featuredPlaylists ?? [])
@@ -96,6 +100,8 @@ export function HomeScreen() {
   }, [curatedSections, curatedPreviews, resolved])
 
   const recommendations = recommendationsQuery.data ?? []
+  const { filteredSongs: filteredRecommendations } = useVideoAvailability(recommendations, "progressive", 8)
+
   const recentFromApi = userStateQuery.data?.recentlyPlayed ?? []
   const recent = recentFromApi.length > 0 ? recentFromApi : getRecentlyPlayed()
 
@@ -104,11 +110,9 @@ export function HomeScreen() {
 
   useEffect(() => {
     if (!isLoading) {
-      const timeout = window.setTimeout(() => setSplashVisible(false), 250)
+      const timeout = window.setTimeout(() => setSplashVisible(false), 500)
       return () => window.clearTimeout(timeout)
     }
-    const timeout = window.setTimeout(() => setSplashVisible(false), 1200)
-    return () => window.clearTimeout(timeout)
   }, [isLoading])
 
   const showSkeleton = isLoading || splashVisible
@@ -118,7 +122,7 @@ export function HomeScreen() {
     null
 
   const handlePlayAll = () => {
-    const list = trending.length > 0 ? trending : recommendations
+    const list = filteredTrending.length > 0 ? filteredTrending : filteredRecommendations
     if (list.length > 0) setQueue(list, 0)
   }
 
@@ -208,9 +212,9 @@ export function HomeScreen() {
         </CarouselSection>
 
         {/* Trending */}
-        {trending.length > 0 && (
+        {filteredTrending.length > 0 && (
           <CarouselSection title="Tendencias" subtitle="Lo mas escuchado ahora">
-            {trending.map((song, index) => (
+            {filteredTrending.map((song, index) => (
               <div key={song.id} className="w-40 flex-shrink-0 group">
                 <div className="relative aspect-square rounded-xl overflow-hidden mb-3 shadow-lg shadow-black/20">
                   <img
@@ -220,7 +224,7 @@ export function HomeScreen() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   <button
-                    onClick={() => setQueue(trending, index)}
+                    onClick={() => setQueue(filteredTrending, index)}
                     className="absolute inset-0 flex items-end justify-end p-2 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                   >
                     <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full gradient-primary flex items-center justify-center shadow-lg">
@@ -254,20 +258,20 @@ export function HomeScreen() {
         )}
 
         {/* Recommendations */}
-        {recommendations.length > 0 && (
+        {filteredRecommendations.length > 0 && (
           <section className="space-y-4">
             <div className="px-4 md:px-0">
               <h2 className="text-xl md:text-2xl font-bold">Recomendaciones para ti</h2>
               <p className="text-sm text-foreground-muted mt-1">Basado en lo que escuchas</p>
             </div>
             <div className="bg-card/50 rounded-xl p-2 mx-4 md:mx-0">
-              {recommendations.map((song, index) => (
+              {filteredRecommendations.map((song, index) => (
                 <SongCard
                   key={`${song.ytid || song.id || 'rec'}-${index}`}
                   song={song}
                   index={index + 1}
                   showIndex
-                  onPlay={() => setQueue(recommendations, index)}
+                  onPlay={() => setQueue(filteredRecommendations, index)}
                 />
               ))}
             </div>

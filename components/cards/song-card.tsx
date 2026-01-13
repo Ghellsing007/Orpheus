@@ -5,7 +5,7 @@ import type React from "react"
 import { Play, MoreVertical, Heart, ListPlus, Radio, Share2 } from "lucide-react"
 import Link from "next/link"
 import type { Song } from "@/types"
-import { formatDuration, cn } from "@/lib/utils"
+import { formatDuration, cn, shareContent } from "@/lib/utils"
 import { useQueue } from "@/contexts/queue-context"
 import { usePlayer } from "@/contexts/player-context"
 import { useState, useEffect, useRef, useLayoutEffect } from "react"
@@ -250,7 +250,18 @@ export function SongCard({
                     <Radio className="w-4 h-4" />
                     Ir a la radio
                   </button>
-                  <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors">
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      shareContent({
+                        title: song.title,
+                        text: `Escucha "${song.title}" de ${song.artist} en Orpheus`,
+                        url: `/song/${song.ytid || song.id}`
+                      })
+                      setShowMenu(false)
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
+                  >
                     <Share2 className="w-4 h-4" />
                     Compartir
                   </button>

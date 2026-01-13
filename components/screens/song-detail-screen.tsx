@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { SongCard } from "@/components/cards/song-card"
 import { useQueue } from "@/contexts/queue-context"
-import { formatDuration, cn } from "@/lib/utils"
+import { formatDuration, cn, shareContent } from "@/lib/utils"
 import { getLikedSongs, toggleLikedSong } from "@/lib/storage"
 import type { Song } from "@/types"
 import { api } from "@/services/api"
@@ -36,7 +36,7 @@ export function SongDetailScreen({ songId }: SongDetailScreenProps) {
 
     const loadSong = async () => {
       try {
-        const detail = await api.getSong(songId)
+        const detail = await api.loadSongResilient(songId)
         if (cancelled) return
         setSong(detail)
         setIsLiked(getLikedSongs().includes(detail.id))
@@ -64,7 +64,8 @@ export function SongDetailScreen({ songId }: SongDetailScreenProps) {
         setRecommendedSongs(fallbackRecs.slice(0, 5))
       } catch (err) {
         if (!cancelled) {
-          setError("No pudimos cargar la cancion")
+          console.error("Error loading song detail:", err)
+          setError(err instanceof Error ? err.message : "No pudimos cargar la cancion")
         }
       } finally {
         if (!cancelled) setIsLoading(false)
@@ -172,11 +173,28 @@ export function SongDetailScreen({ songId }: SongDetailScreenProps) {
           <Play className="w-7 h-7 text-white ml-0.5" fill="currentColor" />
         </button>
 
-        <button className="w-12 h-12 rounded-full bg-card flex items-center justify-center hover:bg-card-hover transition-colors">
+        <button
+          onClick={() => shareContent({
+            title: song.title,
+            text: `Escucha "${song.title}" de ${song.artist} en Orpheus`,
+            url: `/song/${song.ytid || song.id}`
+          })}
+          className="w-12 h-12 rounded-full bg-card flex items-center justify-center hover:bg-card-hover transition-colors"
+        >
           <Share2 className="w-5 h-5" />
         </button>
 
-        <button className="w-12 h-12 rounded-full bg-card flex items-center justify-center hover:bg-card-hover transition-colors">
+        <button
+          onClick={async () => {
+             try {
+                const results = await api.searchSongs(song.artist);
+                if (results.length > 0) {
+                  setQueue(results, 0);
+                }
+             } catch(e) {}
+          }}
+          className="w-12 h-12 rounded-full bg-card flex items-center justify-center hover:bg-card-hover transition-colors"
+        >
           <Radio className="w-5 h-5" />
         </button>
       </div>

@@ -11,6 +11,7 @@ import { useQueue } from "@/contexts/queue-context"
 import { api } from "@/services/api"
 import type { Artist, Playlist, Song } from "@/types"
 import { addRecentSearch, clearRecentSearches, getRecentSearches, removeRecentSearch } from "@/lib/storage"
+import { useVideoAvailability } from "@/hooks/use-video-availability"
 
 type Tab = "all" | "songs" | "playlists" | "artists"
 
@@ -116,14 +117,18 @@ export function SearchScreen() {
   })
 
   const suggestions = suggestionsQuery.data ?? []
-  const songs = query ? searchQuery.data?.songs ?? [] : initialQuery.data?.songs ?? []
+  
+  const rawSongs = query ? searchQuery.data?.songs ?? [] : initialQuery.data?.songs ?? []
+  const { filteredSongs: songs, isInitialLoading: isFilteringSongs } = useVideoAvailability(rawSongs, "eager", 25)
+  
   const playlists = query ? searchQuery.data?.playlists ?? [] : initialQuery.data?.playlists ?? []
-  const initialSongs = initialQuery.data?.songs ?? []
+  
   const artists = useMemo(() => {
     if (debouncedQuery && searchChannelsQuery.data?.length) return searchChannelsQuery.data
-    return buildArtists(songs.length > 0 ? songs : initialSongs)
-  }, [debouncedQuery, searchChannelsQuery.data, songs, initialSongs])
-  const isLoading = query ? searchQuery.isPending : initialQuery.isPending
+    return buildArtists(songs.length > 0 ? songs : rawSongs)
+  }, [debouncedQuery, searchChannelsQuery.data, songs, rawSongs])
+
+  const isLoading = (query ? searchQuery.isPending : initialQuery.isPending) || isFilteringSongs
   const error = query && searchQuery.isError ? "No pudimos completar la busqueda" : null
 
   useEffect(() => {
@@ -340,13 +345,13 @@ export function SearchScreen() {
           <section>
             <h2 className="text-xl font-bold mb-4">Todas las canciones</h2>
             <div className="bg-card/50 rounded-xl p-2">
-              {(initialSongs.length > 0 ? initialSongs : songs).slice(0, 6).map((song, index) => (
+              {songs.slice(0, 6).map((song, index) => (
                 <SongCard
                   key={song.id}
                   song={song}
                   index={index + 1}
                   showIndex
-                  onPlay={() => setQueue(initialSongs.length > 0 ? initialSongs : songs, index)}
+                  onPlay={() => setQueue(songs, index)}
                 />
               ))}
             </div>

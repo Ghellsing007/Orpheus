@@ -12,11 +12,12 @@ import {
   Repeat,
   ListMusic,
   Download,
+  Share2,
 } from "lucide-react"
 import Link from "next/link"
 import { usePlayer } from "@/contexts/player-context"
 import { useQueue } from "@/contexts/queue-context"
-import { formatDuration, cn } from "@/lib/utils"
+import { formatDuration, cn, shareContent } from "@/lib/utils"
 import { useMemo, useState, useRef, useLayoutEffect, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { NowPlayingSheet } from "./now-playing-sheet"
@@ -390,8 +391,8 @@ export function MiniPlayer() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
+                            setShowQueueOnly(true)
                             setShowNowPlaying(true)
-                            setActiveTab("queue")
                             setMenuOpen(false)
                           }}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
@@ -410,6 +411,21 @@ export function MiniPlayer() {
                         >
                           <Download className="w-4 h-4" />
                           {downloading ? "Preparando..." : "Descargar"}
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            shareContent({
+                              title: currentSong.title,
+                              text: `Escucha "${currentSong.title}" de ${currentSong.artist} en Orpheus`,
+                              url: `/song/${currentSong.ytid || currentSong.id}`
+                            })
+                            setMenuOpen(false)
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
+                        >
+                          <Share2 className="w-4 h-4" />
+                          Compartir
                         </button>
                       </div>
                     )}

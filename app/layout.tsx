@@ -42,6 +42,8 @@ export const viewport: Viewport = {
   userScalable: false,
 }
 
+import { InitialLoader } from "@/components/ui/initial-loader"
+
 export default function RootLayout({
   children,
 }: {
@@ -56,6 +58,7 @@ export default function RootLayout({
         <meta name="application-name" content="Orpheus" />
       </head>
       <body className={`${inter.className} font-sans antialiased`}>
+        <InitialLoader />
         <Providers>{children}</Providers>
         <InstallPrompt />
         <UpdateModal />

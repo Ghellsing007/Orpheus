@@ -108,8 +108,15 @@ export function NowPlayingSheet({ open, onClose, initialTab = "playing" }: NowPl
       setActiveTab(initialTab)
       return
     }
-    setPlayerView(activeTab === "playing" ? "expanded" : "floating")
-  }, [open, activeTab, setPlayerView, initialTab])
+    // Sync active tab with initialTab when opening
+    setActiveTab(initialTab)
+  }, [open, initialTab, setPlayerView])
+
+  useEffect(() => {
+    if (open) {
+      setPlayerView(activeTab === "playing" ? "expanded" : "floating")
+    }
+  }, [activeTab, open, setPlayerView])
 
   const handleLike = () => {
     if (currentSong) {

@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { SongCard } from "@/components/cards/song-card"
 import { PlaylistCard } from "@/components/cards/playlist-card"
+import { ArtistCard } from "@/components/cards/artist-card"
 import { CarouselSection } from "@/components/sections/carousel-section"
 import { useQueue } from "@/contexts/queue-context"
 import { formatNumber, cn } from "@/lib/utils"
 import type { Artist, Playlist, Song } from "@/types"
 import { api } from "@/services/api"
+import { useVideoAvailability } from "@/hooks/use-video-availability"
 
 interface ArtistDetailScreenProps {
   artistId: string
@@ -22,6 +24,9 @@ export function ArtistDetailScreen({ artistId }: ArtistDetailScreenProps) {
   const [isFollowing, setIsFollowing] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const rawTopSongs: Song[] = artist?.topSongs || []
+  const { filteredSongs: topSongs } = useVideoAvailability(rawTopSongs, "progressive", 12)
 
   useEffect(() => {
     let cancelled = false
@@ -65,8 +70,7 @@ export function ArtistDetailScreen({ artistId }: ArtistDetailScreenProps) {
     )
   }
 
-  const topSongs: Song[] = artist.topSongs || []
-  const relatedPlaylists: Playlist[] = artist.playlists || []
+  const relatedPlaylists: Playlist[] = artist?.playlists || []
 
   const handlePlayAll = () => {
     if (topSongs.length > 0) {
@@ -188,22 +192,10 @@ export function ArtistDetailScreen({ artistId }: ArtistDetailScreenProps) {
                 .filter((a) => a.id !== artist.id)
                 .slice(0, 6)
                 .map((relatedArtist) => (
-                  <button
-                    key={relatedArtist.id}
-                    onClick={() => router.push(`/artist/${relatedArtist.id}`)}
-                    className="text-center flex-shrink-0 w-28 group"
-                  >
-                    <div className="w-28 h-28 rounded-full overflow-hidden mb-2 shadow-lg">
-                      <img
-                        src={relatedArtist.image || "/placeholder.svg?height=150&width=150&query=artist"}
-                        alt={relatedArtist.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                    <p className="font-medium text-sm truncate group-hover:text-primary transition-colors">
-                      {relatedArtist.name}
-                    </p>
-                  </button>
+                  <ArtistCard 
+                    key={relatedArtist.id} 
+                    artist={relatedArtist} 
+                  />
                 ))
             ) : (
               <div className="text-foreground-muted">Sin artistas relacionados</div>

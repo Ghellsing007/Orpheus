@@ -13,6 +13,7 @@ import { useQueue } from "@/contexts/queue-context"
 import { api } from "@/services/api"
 import { useSettings } from "@/contexts/settings-context"
 import { AuthModal } from "@/components/auth/auth-modal"
+import { useVideoAvailability } from "@/hooks/use-video-availability"
 import type { Playlist, Song, Artist } from "@/types"
 
 type Filter = "all" | "playlists" | "songs" | "artists"
@@ -45,13 +46,17 @@ export function LibraryScreen() {
   const localLikedIds = useMemo(() => getLikedSongs(), [])
   const localRecent = useMemo(() => getRecentlyPlayed(), [])
 
-  const likedSongs = userStateQuery.data?.likedSongs ?? localRecent.filter((s) => localLikedIds.includes(s.id))
+  const rawLikedSongs = userStateQuery.data?.likedSongs ?? localRecent.filter((s) => localLikedIds.includes(s.id))
+  const { filteredSongs: likedSongs } = useVideoAvailability(rawLikedSongs, "progressive", 25)
+  
   const customPlaylists = userStateQuery.data?.customPlaylists ?? []
   const savedPlaylists = userStateQuery.data?.likedPlaylists ?? []
-  const recentSongs =
+  
+  const rawRecentSongs =
     userStateQuery.data?.recentlyPlayed && userStateQuery.data.recentlyPlayed.length > 0
       ? userStateQuery.data.recentlyPlayed
       : localRecent
+  const { filteredSongs: recentSongs } = useVideoAvailability(rawRecentSongs, "progressive", 10)
 
   const likedPlaylistIds = useMemo(
     () => new Set<string>(userStateQuery.data?.likedPlaylists?.map((playlist) => playlist.id) ?? []),
@@ -73,7 +78,7 @@ export function LibraryScreen() {
       }
       const add = !likedPlaylistIds.has(playlistId)
       await api.likePlaylist(userId, playlistId, add)
-      queryClient.invalidateQueries(["userState", userId])
+      queryClient.invalidateQueries({ queryKey: ["userState", userId] })
     },
     [userId, role, likedPlaylistIds, queryClient],
   )
@@ -86,7 +91,7 @@ export function LibraryScreen() {
       }
       const add = !likedArtistIds.has(artistId)
       await api.likeArtist(userId, artistId, add)
-      queryClient.invalidateQueries(["userState", userId])
+      queryClient.invalidateQueries({ queryKey: ["userState", userId] })
     },
     [userId, role, likedArtistIds, queryClient],
   )
