@@ -33,14 +33,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-foreground mb-3">3. Google AdSense y la Cookie DoubleClick</h2>
-            <p>
-              Google, como proveedor de terceros, utiliza cookies para publicar anuncios en nuestro sitio. El uso de la cookie de publicidad permite a Google y a sus socios publicar anuncios basados en tus visitas a nuestro sitio y/o a otros sitios de Internet. Puedes inhabilitar el uso de la publicidad personalizada visitando la configuración de anuncios de Google.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-foreground mb-3">4. Derechos del Usuario</h2>
+            <h2 className="text-2xl font-semibold text-foreground mb-3">3. Derechos del Usuario</h2>
             <p>
               Tienes derecho a acceder, rectificar o eliminar tus datos en cualquier momento a través de la sección de Ajustes de la aplicación.
             </p>

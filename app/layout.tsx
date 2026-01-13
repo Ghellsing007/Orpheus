@@ -43,6 +43,7 @@ export const viewport: Viewport = {
 }
 
 import { InitialLoader } from "@/components/ui/initial-loader"
+import Script from "next/script"
 
 export default function RootLayout({
   children,
@@ -57,18 +58,26 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="application-name" content="Orpheus" />
         <meta name="google-adsense-account" content="ca-pub-2109167817151815" />
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2109167817151815"
-          crossOrigin="anonymous"
-        ></script>
-        <script defer src="https://umami.gvslabs.cloud/script.js" data-website-id="85302052-7bec-42b5-8aed-e2a8d0f5c232"></script>
       </head>
       <body className={`${inter.className} font-sans antialiased`}>
         <InitialLoader />
         <Providers>{children}</Providers>
         <InstallPrompt />
         <UpdateModal />
+        
+        {/* Scripts de Terceros con next/script para evitar errores de hidratacion */}
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2109167817151815"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
+        <Script 
+          defer 
+          src="https://umami.gvslabs.cloud/script.js" 
+          data-website-id="85302052-7bec-42b5-8aed-e2a8d0f5c232"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   )

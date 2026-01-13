@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { useSettings } from "@/contexts/settings-context"
 import { cn } from "@/lib/utils"
 
@@ -8,50 +9,109 @@ interface AdSlotProps {
   className?: string
 }
 
+const HOUSE_ADS = [
+  {
+    id: "administrard",
+    title: "AdministraRD",
+    subtitle: "El sistema todo en uno para operar y crecer",
+    cta: "Solicitar Demo",
+    url: "https://administrard.gvslabs.cloud/",
+    logo: "/administrard.png",
+    bg: "bg-gradient-to-r from-slate-50 to-gray-100",
+    text: "text-slate-800",
+    ctaBg: "bg-emerald-600 hover:bg-emerald-700 text-white",
+  },
+  {
+    id: "gvslabs",
+    title: "GVSLabs",
+    subtitle: "Soluciones tecnológicas para tu negocio",
+    cta: "Saber más",
+    url: "https://www.gvslabs.cloud/",
+    logo: "/gvslabs.png",
+    bg: "bg-gradient-to-r from-slate-900 to-slate-800",
+    text: "text-white",
+    ctaBg: "bg-white hover:bg-gray-100 text-slate-900",
+  },
+]
+
 export function AdSlot({ type, className }: AdSlotProps) {
   const { role } = useSettings()
+  const [adIndex, setAdIndex] = useState(0)
 
-  // Si el usuario es premium, no mostrar anuncios
+  useEffect(() => {
+    setAdIndex(Math.random() > 0.5 ? 1 : 0)
+    const timer = setInterval(() => setAdIndex((i) => (i === 0 ? 1 : 0)), 20000)
+    return () => clearInterval(timer)
+  }, [])
+
   if (role === "premium") return null
+
+  const ad = HOUSE_ADS[adIndex]
+  const isVertical = type === "sidebar" || type === "square"
 
   return (
     <div
       className={cn(
-        "bg-card/40 border border-border/50 rounded-xl flex items-center justify-center overflow-hidden transition-all group hover:border-primary/20",
-        type === "banner" && "w-full h-24 md:h-28 my-4",
+        "rounded-xl overflow-hidden transition-shadow hover:shadow-md",
+        type === "banner" && "w-full h-24 md:h-28 my-3",
         type === "horizontal" && "w-full h-20 md:h-24",
-        type === "sidebar" && "w-full aspect-square md:aspect-[4/5] p-2",
-        type === "square" && "aspect-square w-full max-w-[300px]",
-        className,
+        type === "sidebar" && "w-full h-full min-h-[200px]",
+        type === "square" && "aspect-square w-full max-w-[280px]",
+        type === "video" && "w-full h-20",
+        className
       )}
     >
-      <div className="relative w-full h-full flex flex-col items-center justify-center p-4 text-center">
-        <span className="absolute top-2 left-2 text-[9px] text-foreground-muted uppercase tracking-[0.2em] font-semibold">
-          Anuncio
-        </span>
-        
-        <div className="flex flex-col items-center gap-2">
-           <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-1">
-             <span className="text-[10px] font-bold">$</span>
-           </div>
-           <div className="text-xs font-medium text-foreground-subtle">Espacio Publicitario</div>
-           <p className="text-[10px] text-foreground-muted max-w-[200px] leading-tight">
-             Suscríbete a Orpheus Premium para disfrutar de música sin interrupciones.
-           </p>
+      <a
+        href={ad.url}
+        target="_blank"
+        rel="noreferrer"
+        className={cn(
+          "w-full h-full flex items-center",
+          isVertical ? "flex-col justify-center text-center gap-2 p-3" : "flex-row gap-4 p-4",
+          ad.bg,
+          ad.text
+        )}
+      >
+        {/* Logo */}
+        <img
+          src={ad.logo}
+          alt={ad.title}
+          className={cn(
+            "object-contain flex-shrink-0",
+            isVertical ? "h-8 md:h-10" : "h-10 md:h-14 w-auto"
+          )}
+        />
+
+        {/* Texto */}
+        <div className={cn(
+          "flex flex-col gap-0 min-w-0",
+          isVertical ? "items-center" : "items-start flex-1"
+        )}>
+          <h3 className={cn(
+            "font-bold leading-tight truncate w-full",
+            isVertical ? "text-sm" : "text-lg md:text-xl"
+          )}>
+            {ad.title}
+          </h3>
+          <p className={cn(
+            "opacity-70 line-clamp-2 w-full",
+            isVertical ? "text-[10px] leading-tight" : "text-xs md:text-sm truncate"
+          )}>
+            {ad.subtitle}
+          </p>
         </div>
-        
-        {/* Google AdSense Unit */}
-        <div className="w-full flex justify-center">
-          <ins
-            className="adsbygoogle"
-            style={{ display: "block", width: "100%", height: "100%" }}
-            data-ad-client="ca-pub-2109167817151815"
-            data-ad-slot="auto"
-            data-ad-format="auto"
-            data-full-width-responsive="true"
-          ></ins>
-        </div>
-      </div>
+
+        {/* CTA */}
+        <button
+          className={cn(
+            "flex-shrink-0 font-semibold rounded-full transition-colors",
+            isVertical ? "mt-1 text-[10px] px-3 py-1" : "text-xs px-4 py-2",
+            ad.ctaBg
+          )}
+        >
+          {ad.cta}
+        </button>
+      </a>
     </div>
   )
 }

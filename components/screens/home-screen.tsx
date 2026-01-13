@@ -262,7 +262,7 @@ export function HomeScreen() {
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             <Link href="/magazine/tendencias-musicales-2024" className="group relative aspect-[16/7] rounded-2xl overflow-hidden border border-border/50">
-               <img src="https://images.unsplash.com/photo-1514525253361-bee8718a74a2?q=80&w=800&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="mag" />
+               <img src="/neon-city-night-synthwave-album-cover.jpg" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Synth-Pop" />
                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                <div className="absolute bottom-4 left-4 right-4">
                  <span className="text-[10px] font-bold text-primary uppercase mb-1 block">Análisis</span>
@@ -270,7 +270,7 @@ export function HomeScreen() {
                </div>
             </Link>
             <Link href="/magazine/review-nuevo-album-weeknd" className="group relative aspect-[16/7] rounded-2xl overflow-hidden border border-border/50 hidden md:block">
-               <img src="https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=800&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="mag" />
+               <img src="/dark-emotional-portrait-album-art.jpg" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="The Weeknd Review" />
                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                <div className="absolute bottom-4 left-4 right-4">
                  <span className="text-[10px] font-bold text-primary uppercase mb-1 block">Reseña</span>

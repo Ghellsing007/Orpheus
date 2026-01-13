@@ -11,7 +11,7 @@ const MOCK_ARTICLES = [
     category: "Análisis",
     author: "Elena Ritmo",
     date: "12 Ene 2024",
-    image: "https://images.unsplash.com/photo-1514525253361-bee8718a74a2?q=80&w=800&auto=format&fit=crop",
+    image: "/neon-city-night-synthwave-album-cover.jpg",
     readTime: "5 min"
   },
   {
@@ -21,7 +21,7 @@ const MOCK_ARTICLES = [
     category: "Reseña",
     author: "Marco Beat",
     date: "10 Ene 2024",
-    image: "https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=800&auto=format&fit=crop",
+    image: "/dark-emotional-portrait-album-art.jpg",
     readTime: "8 min"
   },
   {
@@ -31,7 +31,7 @@ const MOCK_ARTICLES = [
     category: "Rankings",
     author: "Sofía Indie",
     date: "08 Ene 2024",
-    image: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?q=80&w=800&auto=format&fit=crop",
+    image: "/psychedelic-dreamy-hazy-album-cover.jpg",
     readTime: "12 min"
   }
 ]

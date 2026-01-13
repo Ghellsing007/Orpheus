@@ -56,6 +56,9 @@ export function PlaylistCard({
       if (songs.length > 0) {
         setQueue(songs, 0)
       }
+    } catch (error) {
+      // Silently handle 404 errors - playlist may not exist in API
+      console.warn(`[PlaylistCard] Could not load playlist ${playlist.id}:`, error)
     } finally {
       setLoading(false)
     }

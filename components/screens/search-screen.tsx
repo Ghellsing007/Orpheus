@@ -119,8 +119,9 @@ export function SearchScreen() {
 
   const suggestions = suggestionsQuery.data ?? []
   
+  // Use progressive mode for faster results - shows songs immediately, only filters out explicitly blocked ones
   const rawSongs = query ? searchQuery.data?.songs ?? [] : initialQuery.data?.songs ?? []
-  const { filteredSongs: songs, isInitialLoading: isFilteringSongs } = useVideoAvailability(rawSongs, "eager", 25)
+  const { filteredSongs: songs, isInitialLoading: isFilteringSongs } = useVideoAvailability(rawSongs, "progressive", 15)
   
   const playlists = query ? searchQuery.data?.playlists ?? [] : initialQuery.data?.playlists ?? []
   
