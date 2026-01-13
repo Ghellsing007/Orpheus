@@ -57,7 +57,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="application-name" content="Orpheus" />
-        <meta name="google-adsense-account" content="ca-pub-2109167817151815" />
+        
       </head>
       <body className={`${inter.className} font-sans antialiased`}>
         <InitialLoader />
@@ -66,12 +66,6 @@ export default function RootLayout({
         <UpdateModal />
         
         {/* Scripts de Terceros con next/script para evitar errores de hidratacion */}
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2109167817151815"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
         <Script 
           defer 
           src="https://umami.gvslabs.cloud/script.js" 
