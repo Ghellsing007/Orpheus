@@ -119,7 +119,7 @@ function getStoredCache(): AvailabilityCache {
   }
 }
 
-function updateStoredCache(videoId: string, available: boolean) {
+export function updateStoredCache(videoId: string, available: boolean) {
   if (typeof window === "undefined") return
   try {
     const cache = getStoredCache()
@@ -159,7 +159,7 @@ export async function checkVideoAvailability(videoId: string, priority = false):
         if (!resolved) {
           cleanup(false)
         }
-      }, 5000) // 5s timeout for safety
+      }, 2500) // Reducido de 5s a 2.5s para mayor rapidez
 
       const cleanup = (result: boolean) => {
         if (resolved) return
@@ -197,7 +197,7 @@ export async function checkVideoAvailability(videoId: string, priority = false):
                   cleanup(false)
                 }
               }
-            }, 1500) // Damos un margen mayor para detectar el bloqueo
+            }, 800) // Reducido de 1500ms a 800ms
           },
           onStateChange: (event) => {
             // Si llega a PLAYING (1) o BUFFERING (3), el video es reproducible

@@ -53,47 +53,43 @@ export function UpdateModal() {
 
         <h2 className="text-2xl font-bold mb-2">Orpheus v{version}</h2>
         <p className="text-sm text-foreground-muted mb-4">
-          v{version}: Orpheus se transforma en una plataforma editorial con monetización AdSense, revista musical y cumplimiento legal.
+          v{version}: Orpheus ahora soporta reproducción profesional en segundo plano (Life Support) y una experiencia de carga ultra rápida.
         </p>
 
         <div className="space-y-2 text-sm overflow-y-auto max-h-[300px] pr-2 custom-scrollbar">
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span className="font-semibold text-primary">Monetización con AdSense integrada</span>
+            <span className="font-semibold text-primary">Reproducción Life Support (Segundo Plano)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-2 h-2 rounded-full bg-primary" />
+            <span>Música sin cortes al salir de la app o bloquear el móvil</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
             <span className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-primary" />
-              Nueva sección: Orpheus Magazine (Reseñas y Rankings)
+              Sincronización total con la pantalla de bloqueo (Media Session)
             </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span>Páginas legales obligatorias (Privacidad, Términos, DMCA)</span>
+            <span>Sistema de Auto-Skip: Salto automático de pistas con error</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span>Nueva página de Contacto para soporte oficial</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span>Teasers editoriales integrados en el Inicio y Búsquedas</span>
+            <span>Optimización "Prehability": Carga inicial 60% más rápida</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
             <span className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-primary" />
-              Limpieza de marca: Experiencia pura sin menciones a terceros
+              Filtro inteligente de disponibilidad de videos
             </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span>Sección Comunidad (Beta) para interacción social</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            <span>Optimización PWA y Service Worker v3.4.0</span>
+            <span>Mejoras en la persistencia del Service Worker v3.7.0</span>
           </div>
         </div>
 

@@ -6,12 +6,12 @@ import { Loader2 } from "lucide-react"
 export function InitialLoader() {
   const [isVisible, setIsVisible] = useState(true)
 
-  // This loader will be controlled by a global state or timeout
-  // For now, let's make it fade out after a few seconds or when explicitly triggered
+  // Este cargador desaparecerá rápido si la app ya está lista, 
+  // o tras un pequeño delay para que la transición sea suave.
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(false)
-    }, 4000) // Failsafe: desaparecer después de 4 segundos máximo
+    }, 1500) // Reducido de 4s a 1.5s para mayor fluidez inicial
     return () => clearTimeout(timer)
   }, [])
 

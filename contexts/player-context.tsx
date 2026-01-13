@@ -6,7 +6,7 @@ import type { Song, PlayerState, RepeatMode, SponsorSegment } from "@/types"
 import { addToRecentlyPlayed } from "@/lib/storage"
 import { api } from "@/services/api"
 import { useSettings } from "./settings-context"
-import { loadYoutubeIframeAPI, type YTPlayer } from "@/lib/youtube"
+import { loadYoutubeIframeAPI, type YTPlayer, updateStoredCache } from "@/lib/youtube"
 import { cn } from "@/lib/utils"
 
 type PlayerViewMode = "floating" | "expanded"
@@ -109,6 +109,11 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [playerReady, setPlayerReady] = useState(false)
   const [playerView, setPlayerView] = useState<PlayerViewMode>("floating")
   const { streamQuality, userId } = useSettings()
+  const currentSongRef = useRef<Song | null>(null)
+
+  useEffect(() => {
+    currentSongRef.current = state.currentSong
+  }, [state.currentSong])
 
   const registerOnEnded = useCallback((callback: () => void) => {
     endedCallbacksRef.current.add(callback)
@@ -293,11 +298,28 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
                 dispatch({ type: "SET_TIME", currentTime: 0 })
               }
             },
-            onError: () => {
+            onError: (event) => {
               if (cancelled) return
+              const errorCode = event.data
+              const songTitle = currentSongRef.current?.title || "Desconocida"
+              
+              // Usamos warn en lugar de error para que Next.js no muestre el overlay rojo en desarrollo
+              console.warn(`[Orpheus Player] ⚠️ La pista "${songTitle}" falló (Error YT: ${errorCode}). Saltando automáticamente...`)
+
+              // Marcar como no disponible para que no vuelva a sonar si es un error de restricción
+              if (currentSongRef.current) {
+                const videoId = currentSongRef.current.ytid || currentSongRef.current.id
+                updateStoredCache(videoId, false)
+              }
+
               dispatch({ type: "SET_ERROR", error: "No se pudo cargar el video" })
               dispatch({ type: "SET_PLAYING", isPlaying: false })
               dispatch({ type: "SET_LOADING", isLoading: false })
+
+              // Saltar a la siguiente canción
+              setTimeout(() => {
+                endedCallbacksRef.current.forEach((cb) => cb())
+              }, 100)
             },
           },
         })

@@ -105,11 +105,16 @@ export function NowPlayingSheet({ open, onClose, initialTab = "playing" }: NowPl
   useEffect(() => {
     if (!open) {
       setPlayerView("floating")
-      setActiveTab(initialTab)
       return
     }
     // Sync active tab with initialTab when opening
-    setActiveTab(initialTab)
+    // Si la pestaña "playing" está bloqueada, redirigimos a "lyrics" por defecto
+    const HIDE_NOW_PLAYING_TAB = process.env.NEXT_PUBLIC_HIDE_NOW_PLAYING_TAB === "true"
+    let tabToSet = initialTab
+    if (HIDE_NOW_PLAYING_TAB && tabToSet === "playing") {
+      tabToSet = "lyrics"
+    }
+    setActiveTab(tabToSet)
   }, [open, initialTab, setPlayerView])
 
   useEffect(() => {
@@ -131,6 +136,8 @@ export function NowPlayingSheet({ open, onClose, initialTab = "playing" }: NowPl
   const artistSlug = currentSong.channelId || currentSong.artist
   const artistHref = artistSlug ? `/artist/${encodeURIComponent(artistSlug)}` : null
 
+  const HIDE_NOW_PLAYING_TAB = process.env.NEXT_PUBLIC_HIDE_NOW_PLAYING_TAB === "true"
+
   return (
     <div className="fixed inset-0 z-50 bg-background slide-up">
       <div className="h-full flex flex-col">
@@ -148,9 +155,10 @@ export function NowPlayingSheet({ open, onClose, initialTab = "playing" }: NowPl
 
         {/* Content */}
         <div className="flex-1 flex flex-col px-6 pb-6 overflow-hidden">
-          {activeTab === "playing" && (
+          {activeTab === "playing" && !HIDE_NOW_PLAYING_TAB && (
             <>
               {/* Album Art */}
+// ... rest of the content (skipped for brevety in replacement chunk, but I must include it)
               <div className="flex-1 flex items-center justify-center py-6">
                 <div className="relative w-full max-w-[320px] md:max-w-[540px] aspect-video rounded-2xl overflow-hidden shadow-2xl shadow-black/50 border border-border/60 bg-card/70">
                   <img
@@ -393,7 +401,9 @@ export function NowPlayingSheet({ open, onClose, initialTab = "playing" }: NowPl
             { id: "playing" as Tab, icon: Play, label: "Reproduciendo" },
             { id: "lyrics" as Tab, icon: Mic2, label: "Letra" },
             { id: "queue" as Tab, icon: ListMusic, label: "Cola" },
-          ].map(({ id, icon: Icon, label }) => (
+          ]
+            .filter((tab) => !HIDE_NOW_PLAYING_TAB || tab.id !== "playing")
+            .map(({ id, icon: Icon, label }) => (
             <button
               key={id}
               onClick={() => setActiveTab(id)}

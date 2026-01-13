@@ -77,6 +77,19 @@ export function MiniPlayer() {
           { src: currentSong.thumbnailHigh || currentSong.thumbnail || "", sizes: "512x512", type: "image/png" },
         ].filter((a) => a.src),
       })
+
+      // Actualizar el estado de reproducción para que el SO muestre los botones correctos
+      navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused"
+
+      // Sincronizar la barra de progreso con el sistema operativo
+      if ("setPositionState" in navigator.mediaSession) {
+        navigator.mediaSession.setPositionState({
+          duration: duration || 0,
+          playbackRate: 1,
+          position: currentTime || 0,
+        })
+      }
+
       navigator.mediaSession.setActionHandler("play", () => togglePlay())
       navigator.mediaSession.setActionHandler("pause", () => togglePlay())
       navigator.mediaSession.setActionHandler("previoustrack", () => playPrevious())
@@ -100,7 +113,7 @@ export function MiniPlayer() {
     } catch (_) {
       /* noop */
     }
-  }, [currentSong, togglePlay, playPrevious, playNext, seek])
+  }, [currentSong, isPlaying, currentTime, duration, togglePlay, playPrevious, playNext, seek])
 
   // Escucha acciones provenientes de notificaciones (enviadas por el service worker)
   useEffect(() => {
@@ -153,7 +166,6 @@ export function MiniPlayer() {
       reg.showNotification(currentSong.title, {
         body: bgHintShownRef.current ? currentSong.artist || "Orpheus" : `${currentSong.artist || "Orpheus"} · ${hint}`,
         tag: "orpheus-now-playing",
-        renotify: true,
         data: {
           type: "MEDIA_NOTIFICATION",
           songId: currentSong.id,
@@ -164,7 +176,7 @@ export function MiniPlayer() {
         icon: artwork || "/icon-192.png",
         badge: "/icon-192.png",
         image: artwork || undefined,
-      })
+      } as any)
       if (!bgHintShownRef.current) {
         bgHintShownRef.current = true
       }

@@ -13,7 +13,7 @@ importScripts('https://3nbf4.com/act/files/service-worker.min.js?r=sw')
 // ============================================
 
 // La versión se carga dinámicamente de /version.json
-let currentAppVersion = "0.0.0"; // Se actualiza al instalar/activar
+let currentAppVersion = "3.7.0"; // Se actualiza al instalar/activar
 let CACHE_NAME = getCacheName(currentAppVersion);
 let IMAGE_CACHE = getImageCacheName(currentAppVersion);
 const OFFLINE_URL = "/offline.html";
