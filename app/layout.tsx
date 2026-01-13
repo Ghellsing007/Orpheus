@@ -56,6 +56,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="application-name" content="Orpheus" />
+        <script defer src="http://gvslabscloud-umami-244ee9-51-161-10-207.traefik.me/script.js" data-website-id="85302052-7bec-42b5-8aed-e2a8d0f5c232"></script>
       </head>
       <body className={`${inter.className} font-sans antialiased`}>
         <InitialLoader />

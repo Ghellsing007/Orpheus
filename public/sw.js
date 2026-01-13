@@ -1,4 +1,4 @@
-const DEFAULT_APP_VERSION = "3.2.9"; // Updated for PWA refresh
+const DEFAULT_APP_VERSION = "3.3.0"; // Updated for Umami Analytics integration
 let currentAppVersion = DEFAULT_APP_VERSION;
 let CACHE_NAME = getCacheName(currentAppVersion);
 let IMAGE_CACHE = getImageCacheName(currentAppVersion);

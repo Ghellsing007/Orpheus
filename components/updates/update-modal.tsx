@@ -53,10 +53,14 @@ export function UpdateModal() {
 
         <h2 className="text-2xl font-bold mb-2">Orpheus v{version}</h2>
         <p className="text-sm text-foreground-muted mb-4">
-          v{version} lista: Filtrado de vídeos mejorado, carga resiliente de canciones, acceso directo a la cola y correcciones técnicas de estabilidad.
+          v{version} lista: Integración de Umami Analytics, filtrado de vídeos mejorado y correcciones de estabilidad en Artists/Playlists.
         </p>
 
         <div className="space-y-2 text-sm">
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-2 h-2 rounded-full bg-primary" />
+            <span className="font-semibold text-primary">Integración de Umami Analytics para seguimiento de uso</span>
+          </div>
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
             <span>Sistema inteligente de filtrado para vídeos de YouTube no disponibles</span>
