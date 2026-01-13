@@ -74,12 +74,25 @@ export default function RootLayout({
         />
         {/* Anuncios de terceros - desactivar con NEXT_PUBLIC_SHOW_THIRD_PARTY_ADS=false */}
         {process.env.NEXT_PUBLIC_SHOW_THIRD_PARTY_ADS !== "false" && (
-          <Script 
-            src="https://quge5.com/88/tag.min.js"
-            data-zone="201617"
-            data-cfasync="false"
-            strategy="afterInteractive"
-          />
+          <>
+            {/* Google AdSense - anuncios no intrusivos */}
+            <Script 
+              id="google-adsense"
+              async
+              src="https://pagead2.googlesyndiation.com/pagead/js/adsbygoogle.js?client=ca-pub-2109167817151815"
+              crossOrigin="anonymous"
+              strategy="afterInteractive"
+              onLoad={() => console.log('[Orpheus Ads] ✅ Google AdSense cargado')}
+            />
+            {/* Log de ads habilitados */}
+            <Script 
+              id="ads-init-log"
+              strategy="afterInteractive"
+              dangerouslySetInnerHTML={{
+                __html: `console.log('[Orpheus Ads] 🚀 Google AdSense habilitado')`
+              }}
+            />
+          </>
         )}
       </body>
     </html>
