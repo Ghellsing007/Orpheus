@@ -122,7 +122,7 @@ export function MiniPlayer() {
 
   return (
     <>
-      <div className="fixed bottom-16 md:bottom-0 left-0 right-0 z-[100] glass border-t border-border">
+      <div className="w-full glass border-t border-border flex-shrink-0">
         <div className="flex flex-col gap-3">
           {/* Progress bar */}
           <div className="px-3 md:px-6 pt-3 pb-5">

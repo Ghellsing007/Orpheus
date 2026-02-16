@@ -101,10 +101,10 @@ export function loadYoutubeIframeAPI(): Promise<YTIframeAPI> {
 }
 
 /**
- * Cache for video availability to avoid redundant checks.
+ * Cache for video availability — only populated when a real playback error occurs.
  * key: videoId, value: { available: boolean, timestamp: number }
  */
-const AVAILABILITY_CACHE_KEY = "yt_availability_cache_v2"
+const AVAILABILITY_CACHE_KEY = "yt_availability_cache_v3"
 const CACHE_TTL = 24 * 60 * 60 * 1000 // 24 hours
 
 type AvailabilityCache = Record<string, { available: boolean; timestamp: number }>
@@ -131,94 +131,15 @@ export function updateStoredCache(videoId: string, available: boolean) {
 }
 
 /**
- * Checks if a YouTube video is available and not restricted.
- * Uses a hidden iframe player to verify.
+ * Checks if a video is already known to be blocked from a previous real playback error.
+ * This does NOT create any IFrame — it only reads the localStorage cache.
+ * Returns true if the video is known to be blocked, false otherwise.
  */
-export async function checkVideoAvailability(videoId: string, priority = false): Promise<boolean> {
-  // Bypass if environment variable is false
-  const shouldCheck = process.env.NEXT_PUBLIC_CHECK_PLAYABILITY !== "false"
-  if (!shouldCheck) return true
-
+export function isKnownBlocked(videoId: string): boolean {
   const cache = getStoredCache()
   const cached = cache[videoId]
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return cached.available
+    return !cached.available
   }
-
-  try {
-    const YT = await loadYoutubeIframeAPI()
-
-    return new Promise((resolve) => {
-      const container = document.createElement("div")
-      container.style.position = "absolute"
-      container.style.width = "0"
-      container.style.height = "0"
-      container.style.pointerEvents = "none"
-      container.style.opacity = "0"
-      container.id = `checker-${videoId}-${Math.random().toString(36).substr(2, 9)}`
-      document.body.appendChild(container)
-
-      let resolved = false
-      const timeout = setTimeout(() => {
-        if (!resolved) {
-          cleanup(false)
-        }
-      }, 5000) // 5s para mayor margen en móviles
-
-      const cleanup = (result: boolean) => {
-        if (resolved) return
-        resolved = true
-        clearTimeout(timeout)
-        updateStoredCache(videoId, result)
-        player.destroy()
-        container.remove()
-        resolve(result)
-      }
-
-      const player = new YT.Player(container, {
-        videoId,
-        playerVars: {
-          autoplay: 0,
-          controls: 0,
-          disablekb: 1,
-          fs: 0,
-          iv_load_policy: 3,
-          modestbranding: 1,
-          playsinline: 1,
-        },
-        events: {
-          onReady: (event) => {
-            // Intentar reproducir para forzar la verificación de restricciones
-            event.target.playVideo()
-
-            // Si después de un momento no ha cambiado a PLAYING o BUFFERING, 
-            // y no ha dado error, podría estar bloqueado silenciosamente
-            setTimeout(() => {
-              if (!resolved) {
-                const state = event.target.getPlayerState()
-                // Si sigue en UNSTARTED (-1) o CUED (5) después de playVideo, algo va mal
-                if (state === -1 || state === 5) {
-                  cleanup(false)
-                }
-              }
-            }, 2000) // 2s para mayor margen en móviles
-          },
-          onStateChange: (event) => {
-            // Si llega a PLAYING (1) o BUFFERING (3), el video es reproducible
-            if (resolved) return
-            if (event.data === 1 || event.data === 3) {
-              cleanup(true)
-            }
-          },
-          onError: () => {
-            // Captura errores de restricción de inserción (101, 150)
-            cleanup(false)
-          },
-        },
-      })
-    })
-  } catch (error) {
-    console.error(`Error verificando disponibilidad para ${videoId}:`, error)
-    return true // Assume available if API fails to load to avoid false negatives
-  }
+  return false
 }

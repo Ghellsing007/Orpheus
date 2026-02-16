@@ -18,7 +18,7 @@ export function BottomNav() {
   ]
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 glass border-t border-border md:hidden">
+    <nav className="w-full glass border-t border-border md:hidden flex-shrink-0">
       <div className="flex items-center justify-around h-16 px-2">
         {navItems.map(({ href, icon: Icon, label }) => {
           const isActive = pathname === href || (href !== "/" && pathname.startsWith(href))

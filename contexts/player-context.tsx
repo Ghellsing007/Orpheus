@@ -110,6 +110,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [playerView, setPlayerView] = useState<PlayerViewMode>("floating")
   const { streamQuality, userId } = useSettings()
   const currentSongRef = useRef<Song | null>(null)
+  const retryMapRef = useRef<Map<string, number>>(new Map())
 
   useEffect(() => {
     currentSongRef.current = state.currentSong
@@ -301,22 +302,54 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
             onError: (event) => {
               if (cancelled) return
               const errorCode = event.data
-              const songTitle = currentSongRef.current?.title || "Desconocida"
-              
-              // Usamos warn en lugar de error para que Next.js no muestre el overlay rojo en desarrollo
-              console.warn(`[Orpheus Player] ⚠️ La pista "${songTitle}" falló (Error YT: ${errorCode}). Saltando automáticamente...`)
+              const song = currentSongRef.current
+              const songTitle = song?.title || "Desconocida"
+              const videoId = song?.ytid || song?.id || ""
 
-              // Marcar como no disponible para que no vuelva a sonar si es un error de restricción
-              if (currentSongRef.current) {
-                const videoId = currentSongRef.current.ytid || currentSongRef.current.id
-                updateStoredCache(videoId, false)
+              // Errores permanentes: video eliminado (100), embed bloqueado (101/150)
+              const isPermanent = errorCode === 100 || errorCode === 101 || errorCode === 150
+
+              if (isPermanent) {
+                console.warn(`[Orpheus] ⛔ "${songTitle}" bloqueada permanentemente (Error YT: ${errorCode}). Saltando...`)
+                if (videoId) updateStoredCache(videoId, false)
+
+                dispatch({ type: "SET_ERROR", error: null }) // No mostrar error visual para esto
+                dispatch({ type: "SET_PLAYING", isPlaying: false })
+                dispatch({ type: "SET_LOADING", isLoading: false })
+
+                // Auto-skip inmediato
+                setTimeout(() => {
+                  endedCallbacksRef.current.forEach((cb) => cb())
+                }, 100)
+                return
               }
 
-              dispatch({ type: "SET_ERROR", error: "No se pudo cargar el video" })
+              // Errores transitorios: ID inválido (2), error HTML5 (5) → reintentar 1 vez
+              const retryKey = videoId || songTitle
+              const retryCount = retryMapRef.current.get(retryKey) || 0
+
+              if (retryCount < 1) {
+                console.warn(`[Orpheus] ⚠️ "${songTitle}" error transitorio (Error YT: ${errorCode}). Reintentando...`)
+                retryMapRef.current.set(retryKey, retryCount + 1)
+
+                // Reintentar después de 1 segundo
+                setTimeout(() => {
+                  if (playerRef.current && videoId) {
+                    playerRef.current.loadVideoById({ videoId, startSeconds: 0 })
+                    playerRef.current.playVideo()
+                  }
+                }, 1000)
+                return
+              }
+
+              // Si ya reintentamos y sigue fallando → saltar
+              console.warn(`[Orpheus] ❌ "${songTitle}" falló después de reintento (Error YT: ${errorCode}). Saltando...`)
+              retryMapRef.current.delete(retryKey)
+
+              dispatch({ type: "SET_ERROR", error: null })
               dispatch({ type: "SET_PLAYING", isPlaying: false })
               dispatch({ type: "SET_LOADING", isLoading: false })
 
-              // Saltar a la siguiente canción
               setTimeout(() => {
                 endedCallbacksRef.current.forEach((cb) => cb())
               }, 100)

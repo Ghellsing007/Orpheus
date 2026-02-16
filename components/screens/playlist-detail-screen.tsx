@@ -10,7 +10,6 @@ import { formatDuration, cn } from "@/lib/utils"
 import type { Playlist } from "@/types"
 import { api } from "@/services/api"
 import { useSettings } from "@/contexts/settings-context"
-import { useVideoAvailability } from "@/hooks/use-video-availability"
 
 interface PlaylistDetailScreenProps {
   playlistId: string
@@ -36,8 +35,7 @@ export function PlaylistDetailScreen({ playlistId }: PlaylistDetailScreenProps) 
   const isLoading = playlistQuery.isPending && !playlist
   const error = playlistQuery.isError ? "No pudimos cargar la playlist" : null
 
-  const rawSongs = playlist?.songs || playlist?.list || []
-  const { filteredSongs: songs } = useVideoAvailability(rawSongs, "progressive", 20)
+  const songs = playlist?.songs || playlist?.list || []
 
   if (isLoading) {
     return (

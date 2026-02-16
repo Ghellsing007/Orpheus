@@ -22,7 +22,7 @@ import { usePlayer } from "@/contexts/player-context"
 import { useQueue } from "@/contexts/queue-context"
 import { formatDuration, cn } from "@/lib/utils"
 import { useTranslations } from "@/hooks/use-translations"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { getLikedSongs, toggleLikedSong } from "@/lib/storage"
 import { api } from "@/services/api"
 
@@ -59,6 +59,16 @@ export function NowPlayingSheet({ open, onClose, initialTab = "playing" }: NowPl
   const [currentLyricIndex, setCurrentLyricIndex] = useState(0)
   const [lyrics, setLyrics] = useState<string[]>([])
   const [lyricsFound, setLyricsFound] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Detectar si es mobile para ocultar tab "Reproduciendo"
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 767px)")
+    setIsMobile(mql.matches)
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    mql.addEventListener("change", handler)
+    return () => mql.removeEventListener("change", handler)
+  }, [])
 
   useEffect(() => {
     if (currentSong) {
@@ -110,14 +120,14 @@ export function NowPlayingSheet({ open, onClose, initialTab = "playing" }: NowPl
       return
     }
     // Sync active tab with initialTab when opening
-    // Si la pestaña "playing" está bloqueada, redirigimos a "lyrics" por defecto
-    const HIDE_NOW_PLAYING_TAB = process.env.NEXT_PUBLIC_HIDE_NOW_PLAYING_TAB === "true"
+    // En mobile o si la env lo indica, redirigimos a "lyrics" por defecto
+    const hidePlayingTab = isMobile || process.env.NEXT_PUBLIC_HIDE_NOW_PLAYING_TAB === "true"
     let tabToSet = initialTab
-    if (HIDE_NOW_PLAYING_TAB && tabToSet === "playing") {
+    if (hidePlayingTab && tabToSet === "playing") {
       tabToSet = "lyrics"
     }
     setActiveTab(tabToSet)
-  }, [open, initialTab, setPlayerView])
+  }, [open, initialTab, setPlayerView, isMobile])
 
   useEffect(() => {
     if (open) {
@@ -138,7 +148,7 @@ export function NowPlayingSheet({ open, onClose, initialTab = "playing" }: NowPl
   const artistSlug = currentSong.channelId || currentSong.artist
   const artistHref = artistSlug ? `/artist/${encodeURIComponent(artistSlug)}` : null
 
-  const HIDE_NOW_PLAYING_TAB = process.env.NEXT_PUBLIC_HIDE_NOW_PLAYING_TAB === "true"
+  const hidePlayingTab = isMobile || process.env.NEXT_PUBLIC_HIDE_NOW_PLAYING_TAB === "true"
 
   return (
     <div className="fixed inset-0 z-50 bg-background slide-up">
@@ -159,7 +169,7 @@ export function NowPlayingSheet({ open, onClose, initialTab = "playing" }: NowPl
 
         {/* Content */}
         <div className="flex-1 flex flex-col px-6 pb-6 overflow-hidden">
-          {activeTab === "playing" && !HIDE_NOW_PLAYING_TAB && (
+          {activeTab === "playing" && !hidePlayingTab && (
             <>
               {/* Album Art */}
               <div className="flex-1 flex items-center justify-center py-6">
@@ -406,7 +416,7 @@ export function NowPlayingSheet({ open, onClose, initialTab = "playing" }: NowPl
             { id: "queue" as Tab, icon: ListMusic, label: t("queue") },
           ]
             .filter((tab) => {
-              if (tab.id === "playing" && HIDE_NOW_PLAYING_TAB) return false
+              if (tab.id === "playing" && hidePlayingTab) return false
               return true
             })
             .map(({ id, icon: Icon, label }) => (

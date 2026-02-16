@@ -59,12 +59,12 @@ export function MainLayout({ children }: MainLayoutProps) {
             </div>
           )}
 
-          <div className="flex-1 overflow-y-auto pb-32 md:pb-24">{children}</div>
+          <div className="flex-1 overflow-y-auto">{children}</div>
 
-          {/* Mini Player */}
+          {/* Mini Player — espacio reservado en el flex, NO fixed */}
           {currentSong && <MiniPlayer />}
 
-          {/* Bottom Navigation - Mobile only */}
+          {/* Bottom Navigation - Mobile only — espacio reservado */}
           <BottomNav />
         </div>
 

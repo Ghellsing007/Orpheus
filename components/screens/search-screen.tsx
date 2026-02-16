@@ -12,7 +12,6 @@ import { useQueue } from "@/contexts/queue-context"
 import { api } from "@/services/api"
 import type { Artist, Playlist, Song } from "@/types"
 import { addRecentSearch, clearRecentSearches, getRecentSearches, removeRecentSearch } from "@/lib/storage"
-import { useVideoAvailability } from "@/hooks/use-video-availability"
 
 type Tab = "all" | "songs" | "playlists" | "artists"
 
@@ -119,18 +118,16 @@ export function SearchScreen() {
 
   const suggestions = suggestionsQuery.data ?? []
   
-  // Use progressive mode for faster results - shows songs immediately, only filters out explicitly blocked ones
-  const rawSongs = query ? searchQuery.data?.songs ?? [] : initialQuery.data?.songs ?? []
-  const { filteredSongs: songs, isInitialLoading: isFilteringSongs } = useVideoAvailability(rawSongs, "progressive", 15)
+  const songs = query ? searchQuery.data?.songs ?? [] : initialQuery.data?.songs ?? []
   
   const playlists = query ? searchQuery.data?.playlists ?? [] : initialQuery.data?.playlists ?? []
   
   const artists = useMemo(() => {
     if (debouncedQuery && searchChannelsQuery.data?.length) return searchChannelsQuery.data
-    return buildArtists(songs.length > 0 ? songs : rawSongs)
-  }, [debouncedQuery, searchChannelsQuery.data, songs, rawSongs])
+    return buildArtists(songs)
+  }, [debouncedQuery, searchChannelsQuery.data, songs])
 
-  const isLoading = (query ? searchQuery.isPending : initialQuery.isPending) || isFilteringSongs
+  const isLoading = query ? searchQuery.isPending : initialQuery.isPending
   const error = query && searchQuery.isError ? "No pudimos completar la busqueda" : null
 
   useEffect(() => {

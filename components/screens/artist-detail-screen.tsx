@@ -11,7 +11,6 @@ import { useQueue } from "@/contexts/queue-context"
 import { formatNumber, cn } from "@/lib/utils"
 import type { Artist, Playlist, Song } from "@/types"
 import { api } from "@/services/api"
-import { useVideoAvailability } from "@/hooks/use-video-availability"
 
 interface ArtistDetailScreenProps {
   artistId: string
@@ -25,8 +24,7 @@ export function ArtistDetailScreen({ artistId }: ArtistDetailScreenProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const rawTopSongs: Song[] = artist?.topSongs || []
-  const { filteredSongs: topSongs } = useVideoAvailability(rawTopSongs, "progressive", 12)
+  const topSongs: Song[] = artist?.topSongs || []
 
   useEffect(() => {
     let cancelled = false

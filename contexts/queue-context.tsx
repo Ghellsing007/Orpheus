@@ -5,6 +5,7 @@ import { createContext, useContext, useReducer, useCallback, useEffect } from "r
 import type { Song, QueueState } from "@/types"
 import { getQueue, saveQueue } from "@/lib/storage"
 import { usePlayer } from "./player-context"
+import { isKnownBlocked } from "@/lib/youtube"
 
 interface QueueContextType extends QueueState {
   addToQueue: (song: Song) => void
@@ -125,8 +126,27 @@ export function QueueProvider({ children }: { children: React.ReactNode }) {
   const playFromQueue = useCallback(
     (index: number) => {
       if (index >= 0 && index < state.items.length) {
+        const song = state.items[index]
+        const videoId = song.ytid || song.id
+        // Si ya sabemos que está bloqueada, buscar la siguiente que no lo esté
+        if (isKnownBlocked(videoId)) {
+          // Buscar la siguiente canción no bloqueada a partir de este índice
+          for (let i = 1; i < state.items.length; i++) {
+            const nextIdx = (index + i) % state.items.length
+            const nextSong = state.items[nextIdx]
+            const nextVideoId = nextSong.ytid || nextSong.id
+            if (!isKnownBlocked(nextVideoId)) {
+              dispatch({ type: "SET_INDEX", index: nextIdx })
+              player.play(state.items[nextIdx])
+              return
+            }
+          }
+          // Si todas están bloqueadas, pausar
+          player.pause()
+          return
+        }
         dispatch({ type: "SET_INDEX", index })
-        player.play(state.items[index])
+        player.play(song)
       }
     },
     [state.items, player],
