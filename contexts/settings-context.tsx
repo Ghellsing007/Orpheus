@@ -156,6 +156,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const setBlockAds = useCallback(
     (blockAds: boolean) => {
       updateSettings({ blockAds })
+      // Forzar reload: los scripts de terceros (next/Script afterInteractive)
+      // no se descargan al desmontar el componente. El reload es la única
+      // forma confiable de desactivarlos completamente.
+      window.location.reload()
     },
     [updateSettings],
   )
